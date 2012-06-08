@@ -77,7 +77,7 @@ $this->_pages['mods/chat_new/index.php']['img']       = 'mods/chat_new/chat_new.
 //$this->_pages['mods/chat_new/index_mystart.php']['title_var'] = 'chat_new';
 //$this->_pages['mods/chat_new/index_mystart.php']['parent'] = AT_NAV_START;
 
-function hello_world_get_group_url($group_id) {
+function chat_new_get_group_url($group_id) {
 	return 'mods/chat_new/index.php';
 }
 ?>
