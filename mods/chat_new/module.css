@@ -1,35 +1,37 @@
 @import url("http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css");
 @import url("../../themes/default/styles.css");
 
-
-	#dialog label, #dialog input { display:block; }
-	#dialog label { margin-top: 0.5em; }
-	#dialog input, #dialog textarea { width: 95%; }
-	#tabs { margin-top: 1em; }
-	#tabs li .ui-icon-close { float: left; margin: 0.4em 0.2em 0 0; cursor: pointer; }
-	#add_tab { cursor: pointer; }
+@import url("http://fluidproject.org/releases/1.2/framework/fss/css/fss-reset.css");
+@import url("http://fluidproject.org/releases/1.2/framework/fss/css/fss-layout.css");
+@import url("http://fluidproject.org/releases/1.2/framework/fss/css/fss-text.css");
+@import url("http://fluidproject.org/releases/1.2/components/reorderer/css/Reorderer.css");
+@import url("http://fluidproject.org/releases/1.2/demos/reorderer/layoutReorderer/css/layoutReorderer.css");  
 
 
 /*===================================================TABLE===================================================================*/
 #chat {min-width: 600px; max-width:1200px;}
-.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
-	font-weight: bold;}
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {font-weight: bold;}
+
 
 /*===================================================COMMON==================================================================*/
-#inbox_list, .conversations {padding:0px !important;}
+#inbox_list, .conversations {padding:0px !important; margin:0px !important;}
 .conversations_item, .inbox_list_item, .inbox_list_item_checked { width:auto; text-align:left; border-top:1px solid #c3c3c3; list-style-type:none;}
 .conversations_item a:hover, .inbox_list_name a:hover {text-decoration:underline; background-color:transparent;}
 .conversations table, #inbox_list table {width:100%; padding:10px; }
 .conversations_middle, .inbox_list_middle {padding:0 15px;}
-.conversations li:last-child, #inbox_list li:last-child {border-bottom:1px solid #c3c3c3;}
+.conversations li:last-child, #inbox_list li:last-child, #settings .settings_category  {border-bottom:1px solid #c3c3c3;}
+.conversations_send, #settings_blacklist_upd, #settings_save {margin:0 15px; padding:2px 10px;}
+
 
 /*===================================================INBOX LIST==============================================================*/
 #inbox_list td {border: 0px !important;}
+.inbox_list_item table, .inbox_list_item_checked table {margin:0px;}
+.inbox_list_item table td:first-child, .inbox_list_item_checked table td:first-child {width:60px; padding-left:20px;}
 .inbox_list_item:hover, .inbox_list_item_checked:hover { background-color:#F2F2F2;}
 .inbox_list_item_checked { background-color:#F2F7F7;}
 .inbox_list_info a:link, .inbox_list_info a:link, a:visited {color:#000;}
 div.course div.shortcuts, a {text-align: left;}
-#inbox_list .picture { border:1px solid #c3c3c3; height:50px; width:50px; margin: 0px;}
+#inbox_list .picture { border:1px solid #c3c3c3; height:50px; width:50px; margin: 5px;}
 .inbox_list_name { font-size:1.1em; }
 .inbox_list_status { margin-left: 5px; font-size:12px; color:#CCC;}
 .inbox_list_time {float:right; margin-right:10px; }
@@ -39,10 +41,38 @@ div.course div.shortcuts, a {text-align: left;}
 .conversations_item a {font-weight: bold;}
 .conversations .picture { border:1px solid #c3c3c3; height:30px; width:30px; margin: 0px;}
 .conversations_name {padding-top:10px;}
-.conversations_item td {vertical-align:top;}
+.conversations_item td {vertical-align:top; border:transparent;}
+.conversations_middle {padding-top: 7px;}
+.conversations_picture {padding:5px 0 0 15px; width:32px;}
 .conversations_textarea {padding:5px !important; border-color:#c3c3c3; margin:15px 0; width:100%; resize:vertical; }
+.conversations_time {float: right; padding-right: 15px;}
 .conversations_table {padding:0px !important; border:0px !important; background:#ECECEC; width:100%;}
-.conversations_send{margin:0 15px; padding:2px 10px;}
-.conversations_table_spacer {width:56px;}
-.conversations_table_button {width:10%; vertical-align:top; padding-top:15px;}
+.conversations_table td {border:transparent; padding:0px !important;}
+.conversations_table td:last-child {padding:15px 0 0 10px !important; width:10%; vertical-align:top;}
+.conversations_table_spacer {width:61px;}
 .conversations_table_button input {cursor:pointer;}
+#tabs { margin-top: 1em; }
+#tabs li .ui-icon-close { float: left; margin: 0.4em 0.2em 0 0; cursor: pointer; }
+
+
+/*===================================================FRIENDS==================================================================*/
+.friends_item {margin-bottom:0px; width:100%;}
+.friends_item td {border:transparent; padding:0px;}
+.friends_item td:first-child {width:41px;}
+.friends_item_picture {border:1px solid #c3c3c3; height:30px; width:30px; margin:5px 5px 5px 10px !important;}
+.friends_item_name { font-size:1.2em; color:#4D4D4D;}
+.myColumn .friends_item_status {float:right; margin-right:10px; color: #CCC;}
+
+
+
+/*===================================================SETTINGS=================================================================*/
+#settings input {margin-left:15px; margin-right:3px;}
+#settings .settings_category {padding-top:20px; margin-bottom:5px;}
+#settings_blacklist {padding:5px !important; border-color:#c3c3c3; margin:15px 0; width:300px; resize:vertical;}
+#settings_table {border-spacing:0px !important;}
+#settings_table td {vertical-align:top; border:none; padding:0px;}
+#settings_blacklist_upd {margin-top:15px;}
+.settings_category {padding-bottom:3px; color:#4D4D4D;}
+#settings_save {margin:10px 0 !important;}
+.settings_category a:hover, .settings_category a:focus {background-color:transparent;}
+.settings_details {cursor:pointer; margin-bottom:-3px;}

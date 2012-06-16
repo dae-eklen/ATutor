@@ -55,3 +55,39 @@ jQuery(function() {
 		});
 	});
 	
+// ================= friends
+var demo = demo || {};
+(function ($, fluid) {
+    demo.initLayoutReorderer = function () {
+        fluid.reorderLayout ("#fluid-LayoutReorderer-sample2", {
+            selectors: {
+                columns: ".myColumn",
+                modules: "> div > div",
+                lockedModules: ".locked",
+                dropWarning: ".flc-reorderer-dropWarning"
+            }
+        });
+    };
+})(jQuery, fluid);
+
+
+// ================= settings help
+	jQuery(function() {
+		jQuery( "#settings_blacklist_dialog" ).dialog({
+			autoOpen: false
+		});
+		jQuery( "#settings_blacklist_opener" ).click(function() {
+			jQuery( "#settings_blacklist_dialog" ).dialog( "open" );
+			return false;
+		});
+	});
+	
+	jQuery(function() {
+		jQuery( "#settings_history_dialog" ).dialog({
+			autoOpen: false
+		});
+		jQuery( "#settings_history_opener" ).click(function() {
+			jQuery( "#settings_history_dialog" ).dialog( "open" );
+			return false;
+		});
+	});
