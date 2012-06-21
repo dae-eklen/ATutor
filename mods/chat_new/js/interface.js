@@ -56,19 +56,65 @@ jQuery(function() {
 	});
 	
 // ================= friends
-var demo = demo || {};
-(function ($, fluid) {
-    demo.initLayoutReorderer = function () {
-        fluid.reorderLayout ("#fluid-LayoutReorderer-sample2", {
-            selectors: {
-                columns: ".myColumn",
-                modules: "> div > div",
-                lockedModules: ".locked",
-                dropWarning: ".flc-reorderer-dropWarning"
-            }
-        });
-    };
-})(jQuery, fluid);
+function changeCategory(user){
+	var clickedUser = document.getElementById(user);
+	var friendsList = document.getElementById("friends_list");
+	var friendsMembers = document.getElementById("friends_members");
+	
+	if (clickedUser.parentNode == friendsList){
+		friendsList.removeChild(clickedUser);
+		friendsMembers.appendChild(clickedUser);
+	}
+	else if (clickedUser.parentNode == friendsMembers){
+		friendsMembers.removeChild(clickedUser);
+		friendsList.appendChild(clickedUser);
+	}
+	
+	refreshForm()
+}
+
+function refreshForm(){
+	var friendsMembers = document.getElementById("friends_members");
+	document.getElementById("nr_of_members").innerHTML = friendsMembers.childNodes.length - 2;
+
+	if (friendsMembers.childNodes.length - 2 == 0){
+		document.getElementById("groupname").disabled = true;
+		document.getElementById("friends_selected_bnt").disabled = true;
+		document.getElementById("friends_selected_label").style.color = '#555';
+	}
+	else if (friendsMembers.childNodes.length - 2 == 1){
+		document.getElementById("groupname").disabled = true;
+		if (validateGroupname() == false){
+			document.getElementById("friends_selected_bnt").disabled = false;
+		document.getElementById("friends_selected_label").style.color = '#555';
+		}
+	}
+	else if (friendsMembers.childNodes.length - 2 >= 2){
+		document.getElementById("groupname").disabled = false;
+		if (validateGroupname() == false){
+			document.getElementById("friends_selected_bnt").disabled = true;
+		}
+	}
+}
+
+function validateGroupname(){
+	var groupname = document.getElementById("groupname");
+	// console.log(groupname.value);
+	if (groupname.value != ""){
+		document.getElementById("friends_selected_bnt").disabled = false;
+		if (groupname.disabled == false && (document.getElementById("friends_members").childNodes.length >= 2)) {
+			document.getElementById("friends_selected_label").style.color = 'green';
+		}
+		return true;
+	}
+	else {
+		document.getElementById("friends_selected_bnt").disabled = true;
+		if (groupname.disabled == false && (document.getElementById("friends_members").childNodes.length >= 2)) {
+			document.getElementById("friends_selected_label").style.color = 'red';
+		}
+		return false;
+	}
+}
 
 
 // ================= settings help
@@ -91,3 +137,18 @@ var demo = demo || {};
 			return false;
 		});
 	});
+	
+
+
+
+(function(){
+    //remove layerX and layerY
+    var all = jQuery.event.props,
+    len = all.length,
+    res = [];
+    while (len--) {
+      var el = all[len];
+      if (el != 'layerX' && el != 'layerY') res.push(el);
+    }
+    jQuery.event.props = res;
+}());
