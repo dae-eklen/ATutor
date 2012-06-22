@@ -14,8 +14,8 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 <div class="fl-container-flex90 fl-left democ-linearize-sections ui-tabs ui-widget ui-widget-content ui-corner-all" id="tabs">
     <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" role="tablist">
         <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tabs-1">Inbox list</a></li>
-        <li class="ui-state-default ui-corner-top"><a href="#tabs-2">Conversations</a></li>
-        <li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active ui-state-focus" role="presentation"><a href="#tabs-3">Friends</a></li>
+        <li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#tabs-2">Conversations</a></li>
+        <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tabs-3">Friends</a></li>
         <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tabs-4">Settings</a></li>
     </ul>
   

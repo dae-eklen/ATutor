@@ -1,8 +1,16 @@
 
 		<div id="subtabs">
 			<ul>
-				<li><a href="#subtabs-1">Conversation 1</a> <span class="ui-icon ui-icon-close">Remove Tab</span></li>
-				<li><a href="#subtabs-2">Conversation 2</a> <span class="ui-icon ui-icon-close">Remove Tab</span></li>
+				<li class="conversation_tab_wrap">
+					<a href="#subtabs-1">Conversation 1</a> 
+					<span class="ui-icon ui-icon-minus" onclick="minimize_medium();">Minimize Tab</span>
+					<span class="ui-icon ui-icon-close">Remove Tab</span>
+				</li>
+				<li class="conversation_tab_wrap">
+					<a href="#subtabs-2">Conversation 2</a> 
+					<span class="ui-icon ui-icon-minus" onclick="minimize_medium();">Minimize Tab</span>
+					<span class="ui-icon ui-icon-close">Remove Tab</span>
+				</li>
 			</ul>
 			<div id="subtabs-1">
 				<ul class="conversations">

@@ -40,7 +40,7 @@ jQuery(function() {
 
 		// tabs init with a custom tab template and an "add" callback filling in the content
 		var jQuerysubtabs = jQuery( "#subtabs").tabs({
-			tabTemplate: "<li><a href='#{href}'>#{label}</a> <span class='ui-icon ui-icon-close'>Remove Tab</span></li>",
+			tabTemplate: "<li><a href='#{href}'>#{label}</a><span class='ui-icon ui-icon-close'>Remove Tab</span><span class='ui-icon ui-icon-close'>Remove Tab</span></li>",
 			add: function( event, ui ) {
 				var tab_content = jQuerytab_content_input.val() || "Tab " + tab_counter + " content.";
 				jQuery( ui.panel ).append( "<p>" + tab_content + "</p>" );
@@ -53,7 +53,11 @@ jQuery(function() {
 			var index = jQuery( "li", jQuerysubtabs ).index( jQuery( this ).parent() );
 			jQuerysubtabs.tabs( "remove", index );
 		});
-	});
+});
+
+function minimize_medium(){
+	console.log("minimize_medium");
+}
 	
 // ================= friends
 function changeCategory(user){
@@ -140,7 +144,7 @@ function validateGroupname(){
 	
 
 
-
+// =================
 (function(){
     //remove layerX and layerY
     var all = jQuery.event.props,

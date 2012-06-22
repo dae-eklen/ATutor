@@ -1,6 +1,7 @@
 @import url("http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css");
 @import url("../../themes/default/styles.css");
 
+
 /*===================================================TABLE===================================================================*/
 #chat {min-width: 600px; max-width:1200px;}
 .ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {font-weight: bold;}
@@ -45,7 +46,8 @@ div.course div.shortcuts, a {text-align: left;}
 .conversations_table_spacer {width:61px;}
 .conversations_table_button input {cursor:pointer;}
 #tabs { margin-top: 1em; }
-#tabs li .ui-icon-close { float: left; margin: 0.4em 0.2em 0 0; cursor: pointer; }
+#tabs li .ui-icon-close, #tabs li .ui-icon-minus { float: left; margin: 0.4em 0.2em 0 0; cursor: pointer; }
+.conversation_tab_wrap {display:inline-table;}
 
 
 /*===================================================FRIENDS==================================================================*/
