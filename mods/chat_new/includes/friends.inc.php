@@ -67,7 +67,7 @@
 	                    Members selected: <span id="nr_of_members">1</span><br/>
 	                    <div id="friends_selected_label">Please specify group name:</div>
 	                    <input id="groupname"  maxlength="100" type="text" onkeypress="refreshForm();"/><br/>
-	                    <input id="friends_selected_bnt" type="button" label="submit" value="Create group chat"/>
+	                    <input id="friends_selected_bnt" type="button" label="submit" value="Create chat"/>
                     </div>
                 </td>
                 

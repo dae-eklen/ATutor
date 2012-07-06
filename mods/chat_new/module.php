@@ -12,15 +12,13 @@ if (!isset($this) || (isset($this) && (strtolower(get_class($this)) != 'module')
 /*******
  * assign the instructor and admin privileges to the constants.
  */
-define('AT_PRIV_HELLO_WORLD',       $this->getPrivilege());
-define('AT_ADMIN_PRIV_HELLO_WORLD', $this->getAdminPrivilege());
+define('AT_PRIV_CHAT_NEW',       $this->getPrivilege());
+define('AT_ADMIN_PRIV_CHAT_NEW', $this->getAdminPrivilege());
 
 /*******
  * create a side menu box/stack.
  */
-$this->_stacks['chat_new'] = array('title_var'=>'chat_new', 'file'=>'mods/chat_new/side_menu.inc.php');
-// ** possible alternative: **
-// $this->addStack('hello_world', array('title_var' => 'hello_world', 'file' => './side_menu.inc.php');
+$this->_stacks['chat_new'] = array('title_var'=>'chat_new', 'file'=>AT_INCLUDE_PATH.'../mods/chat_new/side_menu.inc.php');
 
 /*******
  * create optional sublinks for module "detail view" on course home page

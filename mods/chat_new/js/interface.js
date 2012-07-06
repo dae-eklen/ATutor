@@ -1,3 +1,31 @@
+// ================= hides welcome or chat div
+function hide_div(id){	
+	var dataString = 'id=' + id;
+	jQuery.ajax({
+		type: "POST",
+		url: "ATutor/mods/chat_new/check_auth.php",
+		data: dataString,
+		cache: false,
+		success: function (exists) {
+			if (exists == 0){
+				document.getElementById('chat').style.display = 'none';
+			} else {
+				document.getElementById('welcome').style.display = 'none';
+				
+				var data = exists.split(' ');
+				var jid = data[0];
+				var pass = data[1];
+				
+				connect(jid, pass);
+			}
+        },
+        error: function (xhr, errorType, exception) {
+            console.log("error: " + exception);
+        }		
+	});
+}
+
+
 
 // ================= inbox list
 function read(chbox){
@@ -79,26 +107,28 @@ function changeCategory(user){
 
 function refreshForm(){
 	var friendsMembers = document.getElementById("friends_members");
-	document.getElementById("nr_of_members").innerHTML = friendsMembers.childNodes.length - 2;
-
-	if (friendsMembers.childNodes.length - 2 == 0){
-		document.getElementById("groupname").disabled = true;
-		document.getElementById("friends_selected_bnt").disabled = true;
-		document.getElementById("friends_selected_label").style.color = '#555';
-	}
-	else if (friendsMembers.childNodes.length - 2 == 1){
-		document.getElementById("groupname").disabled = true;
-		if (validateGroupname() == false){
-			document.getElementById("friends_selected_bnt").disabled = false;
-		document.getElementById("friends_selected_label").style.color = '#555';
-		}
-	}
-	else if (friendsMembers.childNodes.length - 2 >= 2){
-		document.getElementById("groupname").disabled = false;
-		if (validateGroupname() == false){
+	if (friendsMembers){
+		document.getElementById("nr_of_members").innerHTML = friendsMembers.childNodes.length - 2;
+		
+		if (friendsMembers.childNodes.length - 2 == 0){
+			document.getElementById("groupname").disabled = true;
 			document.getElementById("friends_selected_bnt").disabled = true;
+			document.getElementById("friends_selected_label").style.color = '#555';
 		}
-	}
+		else if (friendsMembers.childNodes.length - 2 == 1){
+			document.getElementById("groupname").disabled = true;
+			if (validateGroupname() == false){
+				document.getElementById("friends_selected_bnt").disabled = false;
+			document.getElementById("friends_selected_label").style.color = '#555';
+			}
+		}
+		else if (friendsMembers.childNodes.length - 2 >= 2){
+			document.getElementById("groupname").disabled = false;
+			if (validateGroupname() == false){
+				document.getElementById("friends_selected_bnt").disabled = true;
+			}
+		}
+	}	
 }
 
 function validateGroupname(){
