@@ -17,6 +17,22 @@ $_custom_head .= '<script type="text/javascript" src="https://ajax.googleapis.co
 $_custom_css = $_base_path.'mods/chat_new/module.css'; // use a custom stylesheet
 require (AT_INCLUDE_PATH.'header.inc.php');
 
+
+
+//$sql = "SELECT * FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."course_enrollment E USING (member_id) INNER JOIN ".TABLE_PREFIX."members M
+//	WHERE E.course_id=$_SESSION[course_id]
+//	AND E.approved='y'
+//	AND E.member_id=M.member_id
+//	AND E.member_id IN (SELECT member_id FROM ".TABLE_PREFIX."users_online)";
+////	ORDER BY first_name ASC";
+//$result = mysql_query($sql, $db);
+//$course_participants = array();
+//while ($row = mysql_fetch_assoc($result)) {
+//	$course_participants_online[$row['jid']] = $row['first_name'].' '.$row['last_name'];
+////	debug($row['member_id'].':'.$row['first_name'].' '.$row['last_name'].'; ');
+//}
+//debug($course_participants_online);
+
 ?>
 
 	<div id="welcome" class="fl-container-flex90">

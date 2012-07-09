@@ -78,11 +78,11 @@ var Client = {
 		jQuery('#roster')[0].removeChild(elem);
 
 		if (group_el.length-1 > 0) {			
-			var name = elem.getElementsByTagName("td")[1].firstChild;
+			var name = elem.getElementsByTagName("td")[1].innerText;
 			var inserted = false;
 			group_el.each(function () {
-				var cmp_name = jQuery(this).find('.friends_item_name')[0].firstChild;
-				if (name < cmp_name && name != cmp_name) {
+				var cmp_name = jQuery(this).find('.friends_item_name')[0].innerText;
+				if (name < cmp_name) {
 					jQuery(this).before(elem);
 					inserted = true;
 				}
@@ -114,8 +114,8 @@ var Client = {
 		if (group_el.length > 0) {
 			var inserted = false;
 			group_el.each(function () {
-				var cmp_name = jQuery(this).find('.friends_item_name')[0].firstChild;
-				if (name < cmp_name && name != cmp_name) {
+				var cmp_name = jQuery(this).find('.friends_item_name')[0].innerText;
+				if (name < cmp_name) {
 					jQuery(this).before(to_insert);
 					inserted = true;
 				}
@@ -367,6 +367,9 @@ jQuery(document).bind('connect', function (ev, data) {
 								var name = data[1] + ' ' + data[2];
 								var pic = data[3];
 								Client.show_new_contact(jid, name, pic);
+								
+								// send subscription request to all course members
+								
 							}
 				        },
 				        error: function (xhr, errorType, exception) {
