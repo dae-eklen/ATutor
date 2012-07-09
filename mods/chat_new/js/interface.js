@@ -1,5 +1,6 @@
 // ================= hides welcome or chat div
-function hide_div(id){	
+function hide_div(id){
+	// called each time on index page load, gets jid and pass to authenticate	
 	var dataString = 'id=' + id;
 	jQuery.ajax({
 		type: "POST",
