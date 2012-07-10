@@ -17,21 +17,42 @@ $_custom_head .= '<script type="text/javascript" src="https://ajax.googleapis.co
 $_custom_css = $_base_path.'mods/chat_new/module.css'; // use a custom stylesheet
 require (AT_INCLUDE_PATH.'header.inc.php');
 
-
-
-//$sql = "SELECT * FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."course_enrollment E USING (member_id) INNER JOIN ".TABLE_PREFIX."members M
+//
+//	$jid = 'dae-eklen-test@talkr.im';
+//$sql = "SELECT jid FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."course_enrollment E USING (member_id) INNER JOIN ".TABLE_PREFIX."members M
 //	WHERE E.course_id=$_SESSION[course_id]
 //	AND E.approved='y'
 //	AND E.member_id=M.member_id
-//	AND E.member_id IN (SELECT member_id FROM ".TABLE_PREFIX."users_online)";
-////	ORDER BY first_name ASC";
+//	AND C.jid!='".$jid."'";
 //$result = mysql_query($sql, $db);
 //$course_participants = array();
+//$to_echo = '!';
 //while ($row = mysql_fetch_assoc($result)) {
-//	$course_participants_online[$row['jid']] = $row['first_name'].' '.$row['last_name'];
-////	debug($row['member_id'].':'.$row['first_name'].' '.$row['last_name'].'; ');
+////	debug($row['jid']);
+//	array_push($course_participants, $row['jid']);
+////	$to_echo .= ' ' .$row['jid'];
 //}
-//debug($course_participants_online);
+////			debug($to_echo);
+//debug($course_participants);
+
+
+
+//$id = 2;
+//$sql = "SELECT first_name, last_name FROM ".TABLE_PREFIX."members WHERE member_id=$id";
+//			$result = mysql_query($sql, $db);
+//			$row = mysql_fetch_assoc($result);			
+////			$to_echo = $jid. ' ' .$row['first_name']. ' ' .$row['last_name']. ' ' .$_base_path."/images/nophoto.gif";
+//			
+//			$sql = "SELECT jid FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."course_enrollment E USING (member_id) INNER JOIN ".TABLE_PREFIX."members M
+//				WHERE E.course_id=$_SESSION[course_id]
+//				AND E.approved='y'
+//				AND E.member_id=M.member_id
+//				AND C.jid!='".$jid."'";
+//			$result = mysql_query($sql, $db);
+//			while ($row = mysql_fetch_assoc($result)) {
+//				$to_echo .= ' ' .$row['jid'];
+//			}
+//			echo $to_echo;
 
 ?>
 
@@ -63,6 +84,7 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 	
 	
 	<div id="chat">
+		<div id="<?php echo $_SESSION[course_id]; ?>"></div>
 		<div class="fl-container-flex90 fl-left democ-linearize-sections ui-tabs ui-widget ui-widget-content ui-corner-all" id="tabs">
 		    <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" role="tablist">
 		        <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tabs-1">Inbox list</a></li>

@@ -1,9 +1,10 @@
 <?php
 // new entry in chat_members table
-if (isset($_POST['id']) && isset($_POST['jid']) && isset($_POST['pass'])){
+if (isset($_POST['id']) && isset($_POST['jid']) && isset($_POST['pass']) && isset($_POST['course_id'])){
 	$id = $_POST['id'];
 	$jid = $_POST['jid'];
 	$pass = $_POST['pass'];	
+	$course_id = $_POST['course_id'];
 	$sql = "SELECT * FROM ".TABLE_PREFIX."chat_members WHERE member_id=$id";
 	$result = mysql_query($sql, $db);
 	if (count(mysql_fetch_assoc($result)) == 1){
@@ -13,7 +14,18 @@ if (isset($_POST['id']) && isset($_POST['jid']) && isset($_POST['pass'])){
 			$sql = "SELECT first_name, last_name FROM ".TABLE_PREFIX."members WHERE member_id=$id";
 			$result = mysql_query($sql, $db);
 			$row = mysql_fetch_assoc($result);			
-			echo $jid. ' ' .$row['first_name']. ' ' .$row['last_name']. ' ' .$_base_path."/images/nophoto.gif";
+			$to_echo = $jid. ' ' .$row['first_name']. ' ' .$row['last_name']. ' ' .$_base_path."images/nophoto.gif";
+			
+			$sql = "SELECT jid FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."course_enrollment E USING (member_id) INNER JOIN ".TABLE_PREFIX."members M
+				WHERE E.course_id=".$course_id."
+				AND E.approved='y'
+				AND E.member_id=M.member_id
+				AND C.jid!='".$jid."'";
+			$result = mysql_query($sql, $db);
+			while ($row = mysql_fetch_assoc($result)) {
+				$to_echo .= ' ' .$row['jid'];
+			}
+			echo $to_echo;
 		} else{
 			echo 0;
 		}

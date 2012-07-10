@@ -1,19 +1,131 @@
 
 var Client = {
 	connection: null,
+	roster: new Array(),
+	subscribe: new Array(),
+	subscribed: new Array(),
 	
 	// handlers
 	on_roster: function (iq) {
+		jQuery(iq).find('item').each(function () {
+			var jid = jQuery(this).attr('jid');
+			if (jid != '[object object]') {
+				Client.roster.push(jid);
+			}
+		});
+		console.log('roster: ' + Client.roster);
+		
 		// set up presence handler and send initial presence
 		Client.connection.addHandler(Client.on_presence, null, "presence");
+		Client.connection.addHandler(Client.on_presence_subscribe, null, "presence", "subscribe");
+		Client.connection.addHandler(Client.on_presence_subscribed, null, "presence", "subscribed");
 		Client.connection.send($pres());
+	},
+	/*
+	 <message to='dae-eklen@talkr.im'
+type='chat'>
+<body>Come, Darcy, I must have you dance. I hate to see you standing about by
+yourself in this stupid manner. You had much better dance.</body>
+</message>
+
+<presence 
+to='dae-eklen@talkr.im'
+type='subscribe'/>
+
+	 */
+	
+	on_presence_subscribe: function (presence) {	
+		var from = jQuery(presence).attr('from');
+		var from_bare = Strophe.getBareJidFromJid(from);
+		
+		// do nothing if received data is not from course members
+		if (Client.check_membership(from_bare) == false) {
+			console.log("presence from non-member: " + from_bare);
+			return;
+		}
+		
+			console.log('subscribe - ' + from);
+			if (jQuery.inArray(from_bare, Client.subscribe) == -1 && jQuery.inArray(from_bare, Client.subscribed) > -1) {
+				// i initiated, finishing subscription
+				// auto approve
+				Client.connection.send($pres({
+					to: from,
+					"type": "subscribed"}));
+				Client.subscribe.push(from_bare);				
+				
+			} else if (jQuery.inArray(from_bare, Client.subscribe) == -1 && jQuery.inArray(from_bare, Client.subscribed) == -1) {
+				// he initiated, starting
+				// auto approve
+				Client.connection.send($pres({
+					to: from,
+					"type": "subscribed"}));
+				Client.connection.send($pres({
+					to: from,
+					"type": "subscribe"}));
+				Client.subscribe.push(from_bare);
+			}
+			
+			if (jQuery.inArray(from_bare, Client.subscribe) > -1 && jQuery.inArray(from_bare, Client.subscribed) > -1) {
+				// remove
+				removeItem = from_bare;
+				Client.subscribe = jQuery.grep(Client.subscribe, function(value) {
+					return value != removeItem;
+				});
+				Client.subscribed = jQuery.grep(Client.subscribed, function(value) {
+					return value != removeItem;
+				});
+				
+				Client.roster.push(from_bare);
+				console.log("just added- " + Client.roster);
+			}
+			
+			console.log("Client.subscribed- " + Client.subscribed + "; Client.subscribe-" + Client.subscribe);
+	},
+	
+	on_presence_subscribed: function (presence) {
+		var from = jQuery(presence).attr('from');
+		var from_bare = Strophe.getBareJidFromJid(from);
+		
+		// do nothing if received data is not from course members
+		if (Client.check_membership(from_bare) == false) {
+			console.log("presence from non-member: " + from_bare);
+			return;
+		}
+		
+			console.log('subscribed - ' + from);
+			if (jQuery.inArray(from_bare, Client.subscribe) > -1 && jQuery.inArray(from_bare, Client.subscribed) == -1) {
+				// he initiated, finishing subscription
+				Client.connection.send($pres({
+					to: from,
+					"type": "subscribe"}));
+				Client.subscribed.push(from_bare);
+				
+			} else if (jQuery.inArray(from_bare, Client.subscribe) == -1 && jQuery.inArray(from_bare, Client.subscribed) == -1) {
+				// i initiated
+				Client.subscribed.push(from_bare);
+			}
+			
+			if (jQuery.inArray(from_bare, Client.subscribe) > -1 && jQuery.inArray(from_bare, Client.subscribed) > -1) {
+				// remove
+				removeItem = from_bare;
+				Client.subscribe = jQuery.grep(Client.subscribe, function(value) {
+					return value != removeItem;
+				});
+				Client.subscribed = jQuery.grep(Client.subscribed, function(value) {
+					return value != removeItem;
+				});
+				
+				Client.roster.push(from_bare);
+				console.log("just added- " + Client.roster);
+			}
+			
+			console.log("Client.subscribed- " + Client.subscribed + "; Client.subscribe-" + Client.subscribe);
 	},
 	
 	on_presence: function (presence) {
 		var ptype = jQuery(presence).attr('type');
 		var from = jQuery(presence).attr('from');
 		var from_bare = Strophe.getBareJidFromJid(from);
-		// var jid_id = Client.jid_to_id(from);
 		
 		// do nothing if received data is not from course members
 		if (Client.check_membership(from_bare) == false) {
@@ -21,12 +133,7 @@ var Client = {
 			return;
 		}
 
-		if (ptype === 'subscribe') {
-			// populate pending_subscriber, the approve-jid span, and open the dialog
-			Client.pending_subscriber = from;
-			jQuery('#approve-jid').text(Strophe.getBareJidFromJid(from));
-			jQuery('#approve_dialog').dialog('open');
-		} else if (ptype !== 'error') {
+		if (ptype !== 'error') {
 			var contact = document.getElementById(from_bare);
 			if (ptype === 'unavailable') {
 				// console.log(from + ' unavailable');
@@ -43,17 +150,8 @@ var Client = {
 			}
 			Client.replace_contact(contact, online);
 		}
-		// reset addressing for user since their presence changed
-		// var jid_id = Client.jid_to_id(from);
-		// jQuery('#chat-' + jid_id).data('jid', Strophe.getBareJidFromJid(from));
-		// return true;
 	},
 	
-	// jid_to_id: function (jid) {
-		// return Strophe.getBareJidFromJid(jid)
-			// .replace(/@/g, "-")
-			// .replace(/\./g, "-");
-	// },
 	
 	
 	
@@ -110,7 +208,6 @@ var Client = {
 	                        	"<td class='friends_item_status'>Online</td>" +
 	                    	"</tr></table>" + 
 	              		"</div>";
-		
 		if (group_el.length > 0) {
 			var inserted = false;
 			group_el.each(function () {
@@ -126,7 +223,7 @@ var Client = {
 				jQuery('.' + group).last().after(to_insert);
 			}
 		} else {
-			jQuery('.' + 'offline').before(to_insert);
+			jQuery('.' + 'offline' + ':first-child').before(to_insert);
 		}
 	},
 	
@@ -333,7 +430,7 @@ jQuery(document).bind('connect', function (ev, data) {
 	temp = jQuery.cookie("connection");
 	var cookie_conn = JSON.parse(temp);
 	
-	if (cookie_conn != null){		
+	if (cookie_conn != null){
 		var conn = new Strophe.Connection("http://bosh.metajack.im:5280/xmpp-httpbind");	
 			
 		conn.xmlInput = function (body) {
@@ -345,9 +442,11 @@ jQuery(document).bind('connect', function (ev, data) {
 		    
 		conn.connect(data.jid, data.password, function (status) {
 			if (status === Strophe.Status.CONNECTED) {
+				var course_members_jids = new Array();
 				if (data.id != undefined){
 					// make db entry if not exists yet
-					var dataString = 'id=' + data.id + '&jid=' + data.jid + '&pass=' + data.password;
+					var course_id = jQuery('#chat')[0].getElementsByTagName("div")[0].id;
+					var dataString = 'id=' + data.id + '&jid=' + data.jid + '&pass=' + data.password + '&course_id=' + course_id;
 					jQuery.ajax({
 						type: "POST",
 						url: "ATutor/mods/chat_new/check_auth.php",
@@ -355,7 +454,7 @@ jQuery(document).bind('connect', function (ev, data) {
 						cache: false,
 						success: function (returned) {
 							if (returned == 0){
-								console.log('Error: Cannot insert.');
+								console.log('Error: Cannot insert!!.');
 								
 							} else {
 								document.getElementById('welcome').style.display = 'none';
@@ -368,21 +467,23 @@ jQuery(document).bind('connect', function (ev, data) {
 								var pic = data[3];
 								Client.show_new_contact(jid, name, pic);
 								
-								// send subscription request to all course members
+								course_members_jids = data.slice(4, data.length);
+								console.log(course_members_jids);
 								
+								jQuery(document).trigger('connected', [course_members_jids]);
 							}
 				        },
 				        error: function (xhr, errorType, exception) {
 				            console.log("error: " + exception);
 				        }		
 					});
+				} else {
+					// store connection into cookies for later use
+					var json_text = JSON.stringify(conn);
+					jQuery.cookie("connection", json_text, {expires:365});		
+					
+					jQuery(document).trigger('connected', [course_members_jids]);
 				}
-				
-				// store connection into cookies for later use
-				var json_text = JSON.stringify(conn);
-				jQuery.cookie("connection", json_text, {expires:365});		
-				
-				jQuery(document).trigger('connected');
 			} 
 			else if (status === Strophe.Status.AUTHFAIL) {
 				jQuery(document).trigger('authfail');
@@ -403,13 +504,22 @@ jQuery(document).bind('connect', function (ev, data) {
 
 
 // handlers
-jQuery(document).bind('connected', function () {
-	console.log("Connection established.");
-	
+jQuery(document).bind('connected', function (event, course_members_jids) {
+	console.log("Connection established.");	
     var iq = $iq({type: 'get'}).c('query', {xmlns: 'jabber:iq:roster'});
     Client.connection.sendIQ(iq, Client.on_roster);
     // Client.connection.addHandler(Client.on_roster_changed, "jabber:iq:roster", "iq", "set");
     // Client.connection.addHandler(Client.on_message, null, "message", "chat");
+    
+    // send subscription request to all course members (on first login)
+    if (course_members_jids.length > 0) {
+    	for (i = 0; i < course_members_jids.length; ++i) {
+		    console.log("will send to " + course_members_jids[i]);
+			Client.connection.send($pres({
+				to: course_members_jids[i],
+				"type": "subscribe"}));
+		}
+	}    
 	
 	jQuery('.button').removeAttr('disabled');
     jQuery('#input').removeClass('disabled').removeAttr('disabled');

@@ -3,12 +3,12 @@ if (!defined('AT_INCLUDE_PATH')) { exit; }
 global $_base_path, $include_all, $include_one, $stripslashes;
 global $savant;
 	
-$sql = "SELECT * FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."course_enrollment E USING (member_id) INNER JOIN ".TABLE_PREFIX."members M
+$sql = "SELECT jid, first_name, last_name FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."course_enrollment E USING (member_id) INNER JOIN ".TABLE_PREFIX."members M
 	WHERE E.course_id=$_SESSION[course_id]
 	AND E.approved='y'
 	AND E.member_id=M.member_id
-	AND E.member_id IN (SELECT member_id FROM ".TABLE_PREFIX."users_online)";
-//	ORDER BY first_name";
+	AND E.member_id IN (SELECT member_id FROM ".TABLE_PREFIX."users_online)
+	ORDER BY first_name ASC";
 $result = mysql_query($sql, $db);
 $course_participants = array();
 while ($row = mysql_fetch_assoc($result)) {
@@ -16,11 +16,12 @@ while ($row = mysql_fetch_assoc($result)) {
 //	debug($row['member_id'].':'.$row['first_name'].' '.$row['last_name'].'; ');
 }
 
-$sql = "SELECT * FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."course_enrollment E USING (member_id) INNER JOIN ".TABLE_PREFIX."members M
+$sql = "SELECT jid, first_name, last_name FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."course_enrollment E USING (member_id) INNER JOIN ".TABLE_PREFIX."members M
 	WHERE E.course_id=$_SESSION[course_id]
 	AND E.approved='y'
 	AND E.member_id=M.member_id
-	AND E.member_id NOT IN (SELECT member_id FROM ".TABLE_PREFIX."users_online)";
+	AND E.member_id NOT IN (SELECT member_id FROM ".TABLE_PREFIX."users_online)
+	ORDER BY first_name ASC";
 $result = mysql_query($sql, $db);
 $course_participants = array();
 while ($row = mysql_fetch_assoc($result)) {
@@ -44,7 +45,7 @@ ob_start();
 			foreach($course_participants_online as $jid => $name){
 				?><div class="friends_column_wrapper online" id="<?php echo $jid; ?>" onclick="console.log(jQuery(this).attr('id'));">
 	                    	<table class="friends_item"><tr>
-	         					<td><img class="friends_item_picture" src="<?php echo $_base_path; ?>/images/nophoto.gif" alt="userphoto"/></td>
+	         					<td><img class="friends_item_picture" src="<?php echo $_base_path; ?>images/nophoto.gif" alt="userphoto"/></td>
 	                        	<td class="friends_item_name"><?php echo $name; ?></td>
 	                        	<td class="friends_item_status">Online</td>
 	                    	</tr></table>
