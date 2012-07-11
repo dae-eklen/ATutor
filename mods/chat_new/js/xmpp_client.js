@@ -126,6 +126,7 @@ type='subscribe'/>
 		var ptype = jQuery(presence).attr('type');
 		var from = jQuery(presence).attr('from');
 		var from_bare = Strophe.getBareJidFromJid(from);
+		var to_bare = Strophe.getBareJidFromJid(jQuery(presence).attr('to'));
 		
 		// do nothing if received data is not from course members
 		if (Client.check_membership(from_bare) == false) {
@@ -133,23 +134,25 @@ type='subscribe'/>
 			return;
 		}
 
-		if (ptype !== 'error') {
+		if (ptype !== 'error' && from_bare != to_bare) {
 			var contact = document.getElementById(from_bare);
 			if (ptype === 'unavailable') {
-				// console.log(from + ' unavailable');
+				console.log(from_bare + ' unavailable');
 				online = false;
 			} else {
 				var show = jQuery(presence).find("show").text();
 				if (show === "" || show === "chat") {
-					// console.log(from + ' online');
+					console.log(from_bare + ' online');
 					online = true;
 				} else {
-					// console.log(from + ' away');
+					console.log(from_bare + ' away');
 					online = true;
 				}
-			}
-			Client.replace_contact(contact, online);
+			}			
+			Client.replace_contact(contact, online);	
 		}
+
+		return true;
 	},
 	
 	
@@ -172,10 +175,10 @@ type='subscribe'/>
 			elem.className = "friends_column_wrapper offline";
 			elem.getElementsByTagName("td")[2].innerHTML = "";
 		}
-				
+		
 		jQuery('#roster')[0].removeChild(elem);
 
-		if (group_el.length-1 > 0) {			
+		if (group_el.length > 0) {			
 			var name = elem.getElementsByTagName("td")[1].innerText;
 			var inserted = false;
 			group_el.each(function () {
@@ -191,16 +194,15 @@ type='subscribe'/>
 			}
 		} else {
 			if (group == 'online'){
-				jQuery('.' + group_other + ':first-child').before(elem);
+				jQuery('.' + group_other).first().before(elem);
 			} else if (group == 'offline'){
-				jQuery('.' + group_other + ':last-child').after(elem);
+				jQuery('.' + group_other).last().after(elem);
 			}
 		}
 	},
 	
 	show_new_contact: function (jid, name, pic) {
 		group_el = jQuery('.online');
-		group = 'online';
 		to_insert = "<div class='friends_column_wrapper online' id=" + jid + " onclick='console.log(jQuery(this).attr('id'));'>" + 
 	                    	"<table class='friends_item'><tr>" + 
 	         					"<td><img class='friends_item_picture' src='" + pic + "' alt='userphoto'/></td>" +
@@ -220,10 +222,10 @@ type='subscribe'/>
 
 			if (!inserted) {
 				// insert after last element of group
-				jQuery('.' + group).last().after(to_insert);
+				jQuery('.' + 'online').last().after(to_insert);
 			}
 		} else {
-			jQuery('.' + 'offline' + ':first-child').before(to_insert);
+			jQuery('.' + 'offline').first().before(to_insert);
 		}
 	},
 	
@@ -366,7 +368,16 @@ type='subscribe'/>
 
 // console buttons
 function console_disconnect() {
-    Client.connection.disconnect();
+	/*if (Client.roster.length > 0) {
+    	for (i = 0; i < Client.roster.length; ++i) {
+		    console.log("will send unavailable to " + Client.roster[i]);
+			Client.connection.send($pres({
+				to: Client.roster[i],
+				"type": "unavailable"}));
+		}
+	}*/ 
+	Client.connection.disconnect();
+	return false;
 }
 
 function console_send() {
