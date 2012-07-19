@@ -5,7 +5,7 @@ function hide_div(id){
 	var dataString = 'id=' + id;
 	jQuery.ajax({
 		type: "POST",
-		url: "ATutor/mods/chat_new/check_auth.php",
+		url: "ATutor/mods/chat_new/ajax/check_auth.php",
 		data: dataString,
 		cache: false,
 		success: function (exists) {
@@ -211,16 +211,20 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 		var body = jQuery(this).val();
 		if (body == '') {
 			return;
+		} else if (body.length > 65535) { // fits TEXT in MySQL
+			alert("Too large message.");
+			return;
 		}
-		var message = $msg({to: jid,
-							"type": "chat"})
+		
+		var message = $msg({to: jid, "type": "chat"})
 			.c('body').t(body).up()
 			.c('active', {xmlns: "http://jabber.org/protocol/chatstates"});
 		Client.connection.send(message);
 		
 		
 		var my_img = jQuery('.me').find('.friends_item_picture').attr("src");
-		var my_id = jQuery('.me').find('table').attr('id');		
+		var my_id = jQuery('.me').find('table').attr('id');
+		var timestamp = +new Date;
 		jQuery(this).parent().parent().parent().parent().parent().find('.chat_messages').append(
 				"<hr/><table><tr>" + 
          					"<td  class='conversations_picture'>" + 
@@ -234,14 +238,17 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
                         	"</td>" + 
                         	
                         	"<td class='conversations_time'>" + 
-                        	"<span><nobr>" + moment().format('MMMM Do YYYY') + "</nobr></span> " +                            
+                        	"<span><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></span> " +                            
                         	"</td>" + 
                         "</tr></table>");
 					
 		Client.scroll_chat(Client.jid_to_id(jid));
-
 		jQuery(this).val('');
 		jQuery(this).parent().parent().parent().parent().parent().data('composing', false);
+		
+		// make db entry for message
+ 		Client.message_to_db(Strophe.getBareJidFromJid(Client.my_full_jid), Strophe.getBareJidFromJid(jid), body, timestamp);
+ 		
 	} else {
 		var composing = jQuery(this).parent().parent().parent().parent().parent().data('composing');
 		if (!composing) {
@@ -262,14 +269,19 @@ jQuery('.conversations_send').live('click', function () {
 	if (body == '') {
 		jQuery(this).parent().parent().find('td').find('textarea').focus();
 		return;
+	} else if (body.length > 65535) { // fits TEXT in MySQL
+		alert("Too large message.");
+		return;
 	}
+	
 	var message = $msg({to: jid, "type": "chat"})
 		.c('body').t(body).up()
 		.c('active', {xmlns: "http://jabber.org/protocol/chatstates"});
 	Client.connection.send(message);
 	
 	var my_img = jQuery('.me').find('.friends_item_picture').attr("src");
-	var my_id = jQuery('.me').find('table').attr('id');	
+	var my_id = jQuery('.me').find('table').attr('id');
+	var timestamp = +new Date;	
 	jQuery(this).parent().parent().parent().parent().parent().find('.chat_messages').append(
 				"<hr/><table><tr>" + 
          					"<td  class='conversations_picture'>" + 
@@ -283,15 +295,14 @@ jQuery('.conversations_send').live('click', function () {
                         	"</td>" + 
                         	
                         	"<td class='conversations_time'>" + 
-                        	"<span><nobr>" + moment().format('MMMM Do YYYY') + "</nobr></span> " +                            
+                        	"<span><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></span> " +                            
                         	"</td>" + 
                         "</tr></table>");
     jQuery(this).parent().parent().find('td').find('textarea').focus();
-					
-	//Client.scroll_chat(Client.jid_to_id(jid));
-
-	jQuery(this).parent().parent().find('td').find('textarea').val('');
-	//jQuery(this).parent().data('composing', false);	
+    jQuery(this).parent().parent().find('td').find('textarea').val('');
+    
+    // make db entry for message
+    Client.message_to_db(Strophe.getBareJidFromJid(Client.my_full_jid), Strophe.getBareJidFromJid(jid), body, timestamp);	
 });
 
 

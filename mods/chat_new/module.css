@@ -17,6 +17,7 @@
 .conversations_middle, .inbox_list_middle {padding:0 15px;}
 .conversations li:last-child, #inbox_list li:last-child, #settings .settings_category  {border-bottom:1px solid #c3c3c3;}
 .conversations_send, #settings_blacklist_upd, #settings_save, #friends_selected_bnt {margin:0 15px; padding:2px 10px;}
+.friends_column_wrapper, .friends_column_wrapper_classmates {margin:5px; cursor: pointer;}
 
 
 /*===================================================INBOX LIST==============================================================*/
@@ -63,7 +64,6 @@ div.course div.shortcuts, a {text-align: left;}
 #friends h2 {font-size:1.1em; padding-left:5px;}
 #friends td {vertical-align:top; border:1px solid #c3c3c3; background-color:#ECECEC; margin-left:15px;}
 #friends .friends_item td {border:none; background-color:#fff; vertical-align:middle;}
-.friends_column_wrapper {margin:5px; cursor: pointer;}
 .friends_item_name {font-size:1em; color:#1A4A72; font-weight:bold;}
 .friends_item_status {font-size:1em; color:#CCC; float:right; padding-right:10px;}
 .friends_spacer {width:0.5%; background-color:#fff !important; border:1px solid #fff !important;}

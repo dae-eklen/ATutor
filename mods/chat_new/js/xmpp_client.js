@@ -21,6 +21,13 @@ var Client = {
 		Client.connection.addHandler(Client.on_presence_subscribe, null, "presence", "subscribe");
 		Client.connection.addHandler(Client.on_presence_subscribed, null, "presence", "subscribed");
 		Client.connection.send($pres());
+		
+		// everyone in roster except me is shown as offline till presence is received
+		jQuery('.friends_column_wrapper').each(function () {
+			if (jQuery(this)[0].className.search('me') == -1) {
+				Client.replace_contact(jQuery(this)[0], false);
+			}
+		});
 	},
 	
 	on_presence_subscribe: function (presence) {	
@@ -176,12 +183,15 @@ var Client = {
 			return true;
 		}
 		
-		console.log(message);
-		
 		if (jQuery('#chat_' + jid_id).length !== 0){
 			var composing = jQuery(message).find('composing');
 			if (composing.length > 0) {
 				jQuery('#chat_' + jid_id + ' .chat_messages').parent().find('.chat_event').text(sender_name + ' started typing...');
+			}
+			
+			var paused = jQuery(message).find('paused');
+			if (paused.length > 0) {
+				jQuery('#chat_' + jid_id + ' .chat_messages').parent().find('.chat_event').text();
 			}
 		}
 
@@ -222,7 +232,7 @@ var Client = {
 					"</tr></table>");
 			}
 			jQuery('#chat_' + jid_id).data('jid', from);
-			console.log('mes: got new res - ' + from);
+			//console.log('msg: got new res - ' + from);
 			
 			jQuery('#subtabs').tabs('select', '#chat_' + jid_id);
 			jQuery('#chat_' + jid_id + ' textarea').focus();
@@ -232,7 +242,8 @@ var Client = {
 
 			// add the new message
 			var sender_img_src = jQuery("div").filter(document.getElementById(from_bare)).find('.friends_item_picture').attr("src");
-			var sender_id = document.getElementById(from_bare).getElementsByTagName('table')[0].id;			
+			var sender_id = document.getElementById(from_bare).getElementsByTagName('table')[0].id;	
+			var timestamp = +new Date;		
 			jQuery('#chat_' + jid_id + ' .chat_messages').append(
 						"<hr/><table><tr>" + 
          					"<td  class='conversations_picture'>" + 
@@ -246,9 +257,12 @@ var Client = {
                         	"</td>" + 
                         	
                         	"<td class='conversations_time'>" + 
-                        	"<span><nobr>" + moment().format('MMMM Do YYYY') + "</nobr></span> " +                            
+                        	"<span><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></span> " +                            
                         	"</td>" + 
                         "</tr></table>");
+                        
+            // make db entry for message
+            Client.message_to_db(from_bare, Strophe.getBareJidFromJid(jQuery(message).attr('to')), body, timestamp);
 
 			Client.scroll_chat(jid_id);
 		}
@@ -356,7 +370,7 @@ var Client = {
 		var dataString = 'jid=' + jid;
 		jQuery.ajax({
 			type: "POST",
-			url: "ATutor/mods/chat_new/check_membership.php",
+			url: "ATutor/mods/chat_new/ajax/check_membership.php",
 			data: dataString,
 			cache: false,
 			success: function (returned) {
@@ -371,6 +385,22 @@ var Client = {
 			}		
 		});
 	},
+	
+	message_to_db: function (from, to, msg, timestamp) {		
+		var dataString = 'from=' + from + '&to=' + to + '&msg=' + msg + '&timestamp=' + timestamp;
+		jQuery.ajax({
+			type: "POST",
+			url: "ATutor/mods/chat_new/ajax/new_message.php",
+			data: dataString,
+			cache: false,
+			success: function (returned) {
+				console.log(returned);
+			},
+			error: function (xhr, errorType, exception) {
+			    console.log("error: " + exception);
+			}		
+		});
+	}, 
 	
 	jid_to_id: function (jid) {
 		return Strophe.getBareJidFromJid(jid)
@@ -420,7 +450,7 @@ jQuery(document).bind('connect', function (ev, data) {
 					var dataString = 'id=' + data.id + '&jid=' + data.jid + '&pass=' + data.password + '&course_id=' + course_id;
 					jQuery.ajax({
 						type: "POST",
-						url: "ATutor/mods/chat_new/check_auth.php",
+						url: "ATutor/mods/chat_new/ajax/check_auth.php",
 						data: dataString,
 						cache: false,
 						success: function (returned) {
@@ -479,9 +509,7 @@ jQuery(document).bind('connected', function (event, course_members_jids) {
 	console.log("Connection established.");	
 	
     var iq_roster = $iq({type: 'get'}).c('query', {xmlns: 'jabber:iq:roster'});
-    Client.connection.sendIQ(iq_roster, Client.on_roster);  
-    
-    // Client.connection.addHandler(Client.on_roster_changed, "jabber:iq:roster", "iq", "set");
+    Client.connection.sendIQ(iq_roster, Client.on_roster);
     Client.connection.addHandler(Client.on_message, null, "message", "chat");
     
     // send subscription request to all course members (on first login course_members_jids.length > 0)
