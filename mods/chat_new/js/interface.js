@@ -1,3 +1,4 @@
+	    
 // ================= hides welcome or chat div
 function hide_div(id){
 	// called each time on index page load, gets jid and pass to authenticate	
@@ -175,9 +176,151 @@ function validateGroupname(){
 	
 
 
-// =================
+
+// ================= tabs
+jQuery('.friends_column_wrapper').live('click', function () {
+	// do nothing if clicked on self
+	if (jQuery(this).attr('class').search('me') > 0) {
+		return;
+	}
+	
+	var jid = jQuery(this).attr('id');
+	var name = jQuery(this).find('.friends_item_name').text();
+	var jid_id = Client.jid_to_id(jid);
+
+	if (jQuery('#chat_' + jid_id).length === 0) {
+		jQuery('#subtabs').tabs( "add", '#chat_' + jid_id, name);
+		jQuery('#chat_' + jid_id).append(
+			"<div class='chat_messages'></div><hr/>" +
+			"<table class='conversations_table'><tr>" +
+				"<td class='conversations_table_spacer'></td>" +
+				"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + jid + "'></textarea></td>" +
+				"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/></td>" +
+			"</tr></table>");
+		jQuery('#chat_' + jid_id).data('jid', jid);
+	}
+	jQuery('#subtabs').tabs('select', '#chat_' + jid_id);
+	jQuery('#chat_' + jid_id + ' textarea').focus();
+});
+
+jQuery('.conversations_textarea').live('keypress', function (ev) {
+	var jid = jQuery(this).parent().parent().parent().parent().parent().data('jid');
+
+	if (ev.which === 13) {
+		ev.preventDefault();
+		var body = jQuery(this).val();
+		if (body == '') {
+			return;
+		}
+		var message = $msg({to: jid,
+							"type": "chat"})
+			.c('body').t(body).up()
+			.c('active', {xmlns: "http://jabber.org/protocol/chatstates"});
+		Client.connection.send(message);
+		
+		
+		var my_img = jQuery('.me').find('.friends_item_picture').attr("src");
+		var my_id = jQuery('.me').find('table').attr('id');		
+		jQuery(this).parent().parent().parent().parent().parent().find('.chat_messages').append(
+				"<hr/><table><tr>" + 
+         					"<td  class='conversations_picture'>" + 
+                            "<img class='picture' src='" + my_img + "' alt='userphoto'/>" + 
+                        	"</td>" + 
+                        	
+                        	"<td  class='conversations_middle'>" + 
+                        	"<label class='conversations_name'><a href='profile.php?id=" + my_id + "'>" + "Me" + "</a></label>" + 
+                        	"<div class='conversations_msg'>" + body + 
+							"</div>" + 
+                        	"</td>" + 
+                        	
+                        	"<td class='conversations_time'>" + 
+                        	"<span><nobr>" + moment().format('MMMM Do YYYY') + "</nobr></span> " +                            
+                        	"</td>" + 
+                        "</tr></table>");
+					
+		Client.scroll_chat(Client.jid_to_id(jid));
+
+		jQuery(this).val('');
+		jQuery(this).parent().parent().parent().parent().parent().data('composing', false);
+	} else {
+		var composing = jQuery(this).parent().parent().parent().parent().parent().data('composing');
+		if (!composing) {
+			var notify = $msg({to: jid, "type": "chat"})
+				.c('composing', {xmlns: "http://jabber.org/protocol/chatstates"});
+			Client.connection.send(notify);
+
+			jQuery(this).parent().parent().parent().parent().parent().data('composing', true);
+		}
+	}
+});
+
+
+// ================= send button
+jQuery('.conversations_send').live('click', function () {
+	var jid = jQuery(this).parent().parent().parent().parent().parent().data('jid');
+	var body = jQuery(this).parent().parent().find('td').find('textarea').val();
+	if (body == '') {
+		jQuery(this).parent().parent().find('td').find('textarea').focus();
+		return;
+	}
+	var message = $msg({to: jid, "type": "chat"})
+		.c('body').t(body).up()
+		.c('active', {xmlns: "http://jabber.org/protocol/chatstates"});
+	Client.connection.send(message);
+	
+	var my_img = jQuery('.me').find('.friends_item_picture').attr("src");
+	var my_id = jQuery('.me').find('table').attr('id');	
+	jQuery(this).parent().parent().parent().parent().parent().find('.chat_messages').append(
+				"<hr/><table><tr>" + 
+         					"<td  class='conversations_picture'>" + 
+                            "<img class='picture' src='" + my_img + "' alt='userphoto'/>" + 
+                        	"</td>" + 
+                        	
+                        	"<td  class='conversations_middle'>" + 
+                        	"<label class='conversations_name'><a href='profile.php?id=" + my_id + "'>" + "Me" + "</a></label>" + 
+                        	"<div class='conversations_msg'>" + body + 
+							"</div>" + 
+                        	"</td>" + 
+                        	
+                        	"<td class='conversations_time'>" + 
+                        	"<span><nobr>" + moment().format('MMMM Do YYYY') + "</nobr></span> " +                            
+                        	"</td>" + 
+                        "</tr></table>");
+    jQuery(this).parent().parent().find('td').find('textarea').focus();
+					
+	//Client.scroll_chat(Client.jid_to_id(jid));
+
+	jQuery(this).parent().parent().find('td').find('textarea').val('');
+	//jQuery(this).parent().data('composing', false);	
+});
+
+
+// ================= logging in
+function connect(jid, pass) {
+	Client.clear_log();
+	document.body.style.cursor = "wait";
+	if (jid==null && pass==null){
+		jQuery(document).trigger('connect', {
+			jid: jQuery('#welcome_form_jid').val() + "@" + jQuery('#welcome_form_select').val(),
+			password: jQuery('#welcome_form_pass').val(),
+			id: jQuery('#welcome_form_member_id').val()
+		});
+	} else {
+		jQuery(document).trigger('connect', {
+			jid: jid,
+			password: pass
+		});
+	} 
+	//jQuery('#welcome_form_pass').val('');
+}
+
+
+
+
+
+
+// ================= remove layerX and layerY
 (function(){
-    //remove layerX and layerY
     var all = jQuery.event.props,
     len = all.length,
     res = [];

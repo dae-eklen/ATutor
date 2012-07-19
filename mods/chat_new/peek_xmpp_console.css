@@ -5,7 +5,7 @@
 
 #peek #console {padding: 10px; height: 300px; border: solid 1px #000; width: 1408px;
     background-color: #fff; color: #000; font-family: monospace; font-size: 1.1em; overflow: auto;}
-#peek #input { width: 100%; height: 100px; font-family: monospace; width: 1424px;}
+#peek #console_input { width: 100%; height: 100px; font-family: monospace; width: 1424px;}
 #peek .incoming {background-color: #F2F7F7; margin:10px 0; padding:10px 0;}
 #peek textarea.disabled {background-color: #eee;}
 #peek #buttonbar {margin: 10px;}

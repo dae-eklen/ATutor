@@ -4,6 +4,7 @@ var Client = {
 	roster: new Array(),
 	subscribe: new Array(),
 	subscribed: new Array(),
+	my_full_jid: new String(),
 	
 	// handlers
 	on_roster: function (iq) {
@@ -21,18 +22,6 @@ var Client = {
 		Client.connection.addHandler(Client.on_presence_subscribed, null, "presence", "subscribed");
 		Client.connection.send($pres());
 	},
-	/*
-	 <message to='dae-eklen@talkr.im'
-type='chat'>
-<body>Come, Darcy, I must have you dance. I hate to see you standing about by
-yourself in this stupid manner. You had much better dance.</body>
-</message>
-
-<presence 
-to='dae-eklen@talkr.im'
-type='subscribe'/>
-
-	 */
 	
 	on_presence_subscribe: function (presence) {	
 		var from = jQuery(presence).attr('from');
@@ -40,7 +29,7 @@ type='subscribe'/>
 		
 		// do nothing if received data is not from course members
 		if (Client.check_membership(from_bare) == false) {
-			console.log("presence from non-member: " + from_bare);
+			console.log("presence subscribe from non-member: " + from_bare);
 			return;
 		}
 		
@@ -88,7 +77,7 @@ type='subscribe'/>
 		
 		// do nothing if received data is not from course members
 		if (Client.check_membership(from_bare) == false) {
-			console.log("presence from non-member: " + from_bare);
+			console.log("presence subscribed from non-member: " + from_bare);
 			return;
 		}
 		
@@ -127,38 +116,156 @@ type='subscribe'/>
 		var from = jQuery(presence).attr('from');
 		var from_bare = Strophe.getBareJidFromJid(from);
 		var to_bare = Strophe.getBareJidFromJid(jQuery(presence).attr('to'));
+		//console.log('from: ' + from + '  to: ' + jQuery(presence).attr('to') + '  ptype: ' + ptype + '  show: ' + jQuery(presence).find("show").text());
+		
+		if (Client.my_full_jid == '') {
+			Client.my_full_jid = jQuery(presence).attr('to');
+			Client.connection.send($pres().c('show').t(Client.my_full_jid));
+		}
 		
 		// do nothing if received data is not from course members
 		if (Client.check_membership(from_bare) == false) {
 			console.log("presence from non-member: " + from_bare);
-			return;
+			return true;
 		}
 
 		if (ptype !== 'error' && from_bare != to_bare) {
 			var contact = document.getElementById(from_bare);
-			if (ptype === 'unavailable') {
-				console.log(from_bare + ' unavailable');
+			if (jQuery(presence).find("show").text() == from) {
+				jQuery("div").filter(contact).data('full_jid', from);
+				//console.log('!!! put ' + from);
+			}
+			
+			if (ptype === 'unavailable' && jQuery("div").filter(contact).data('full_jid') == from) {
+				// ATutor chat user
+				//console.log(from_bare + ' unavailable from ATutor chat');
+				online = false;
+			} else if (ptype === 'unavailable' && jQuery("div").filter(contact).data('full_jid') == undefined) {
+				// other client user
+				//console.log(from_bare + ' unavailable from other client');
 				online = false;
 			} else {
 				var show = jQuery(presence).find("show").text();
 				if (show === "" || show === "chat") {
-					console.log(from_bare + ' online');
+					//console.log(from_bare + ' online');
 					online = true;
 				} else {
-					console.log(from_bare + ' away');
+					//console.log(from_bare + ' away');
 					online = true;
 				}
 			}			
 			Client.replace_contact(contact, online);	
 		}
 
+		// reset addressing for user since their presence changed
+		var jid_id = Client.jid_to_id(from);
+		jQuery('#chat_' + jid_id).data('jid', Strophe.getBareJidFromJid(from));
+		
+		return true;
+	},
+	
+	on_message: function (message) {		
+		var from = jQuery(message).attr('from');
+		var from_bare = Strophe.getBareJidFromJid(from);
+		var jid_id = Client.jid_to_id(from_bare);
+		var sender_name = jQuery("div").filter(document.getElementById(from_bare)).find('.friends_item_name').text();
+		
+		// do nothing if received data is not from course members
+		if (Client.check_membership(from_bare) == false) {
+			console.log("message from non-member: " + from_bare);
+			return true;
+		}
+		
+		console.log(message);
+		
+		if (jQuery('#chat_' + jid_id).length !== 0){
+			var composing = jQuery(message).find('composing');
+			if (composing.length > 0) {
+				jQuery('#chat_' + jid_id + ' .chat_messages').parent().find('.chat_event').text(sender_name + ' started typing...');
+			}
+		}
+
+
+		var body = jQuery(message).find("html > body");
+
+		if (body.length === 0) {
+			body = jQuery(message).find('body');
+			if (body.length > 0) {
+				body = body.text()
+			} else {
+				body = null;
+			}
+		} else {
+			body = body.contents();
+			var span = jQuery("<span></span>");
+			body.each(function () {
+				if (document.importNode) {
+					jQuery(document.importNode(this, true)).appendTo(span);
+				} else {
+					// IE workaround
+					span.append(this.xml);
+				}
+			});
+
+			body = span;
+		}
+
+		if (body) {
+			if (jQuery('#chat_' + jid_id).length === 0) {
+				jQuery('#subtabs').tabs('add', '#chat_' + jid_id, sender_name);
+				jQuery('#chat_' + jid_id).append(
+					"<div class='chat_messages'></div><hr/>" +
+					"<table class='conversations_table'><tr>" +
+						"<td class='conversations_table_spacer'></td>" +
+						"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + from_bare + "'></textarea></td>" +
+						"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/></td>" +
+					"</tr></table>");
+			}
+			jQuery('#chat_' + jid_id).data('jid', from);
+			console.log('mes: got new res - ' + from);
+			
+			jQuery('#subtabs').tabs('select', '#chat_' + jid_id);
+			jQuery('#chat_' + jid_id + ' textarea').focus();
+			
+			// remove notifications since user is now active
+			jQuery('#chat_' + jid_id + ' .chat_messages').parent().find('.chat_event').text('');
+
+			// add the new message
+			var sender_img_src = jQuery("div").filter(document.getElementById(from_bare)).find('.friends_item_picture').attr("src");
+			var sender_id = document.getElementById(from_bare).getElementsByTagName('table')[0].id;			
+			jQuery('#chat_' + jid_id + ' .chat_messages').append(
+						"<hr/><table><tr>" + 
+         					"<td  class='conversations_picture'>" + 
+                            "<img class='picture' src='" + sender_img_src + "' alt='userphoto'/>" + 
+                        	"</td>" + 
+                        	
+                        	"<td  class='conversations_middle'>" + 
+                        	"<label class='conversations_name'><a href='profile.php?id=" + sender_id + "'>" + sender_name + "</a></label>" + 
+                        	"<div class='conversations_msg'>" + body + 
+							"</div>" + 
+                        	"</td>" + 
+                        	
+                        	"<td class='conversations_time'>" + 
+                        	"<span><nobr>" + moment().format('MMMM Do YYYY') + "</nobr></span> " +                            
+                        	"</td>" + 
+                        "</tr></table>");
+
+			Client.scroll_chat(jid_id);
+		}
 		return true;
 	},
 	
 	
+	// logs
+	log: function (msg) {
+		jQuery('#log').append("<p>" + msg + "</p>");
+	},
 	
+	clear_log: function (){
+		jQuery('#log').empty();
+	},
 	
-	
+		
 	// helpers
 	replace_contact: function (elem, online) {
 		if (online == true){
@@ -166,36 +273,52 @@ type='subscribe'/>
 			group = 'online';
 			group_other = 'offline';
 			
-			elem.className = "friends_column_wrapper online";
-			elem.getElementsByTagName("td")[2].innerHTML = "Online";
+			if (elem.className.search('me') > 0) {
+				elem.className = "friends_column_wrapper online me";
+			} else {
+				elem.className = "friends_column_wrapper online";
+			}
+			jQuery("div").filter(elem).find("td")[2].textContent = "Online";
 		} else {
 			group_el = jQuery('.offline');
 			group = 'offline';
+			group_other = 'online';
 			
-			elem.className = "friends_column_wrapper offline";
-			elem.getElementsByTagName("td")[2].innerHTML = "";
+			if (elem.className.search('me') > 0) {
+				elem.className = "friends_column_wrapper offline me";
+			} else {
+				elem.className = "friends_column_wrapper offline";
+			}			
+			jQuery("div").filter(elem).find("td")[2].textContent = "";
 		}
 		
 		jQuery('#roster')[0].removeChild(elem);
 
-		if (group_el.length > 0) {			
-			var name = elem.getElementsByTagName("td")[1].innerText;
+		if (group_el.length > 0) {
+			//console.log('1');			
+			var name = elem.getElementsByTagName("td")[1].textContent;
 			var inserted = false;
 			group_el.each(function () {
-				var cmp_name = jQuery(this).find('.friends_item_name')[0].innerText;
+				var cmp_name = jQuery(this).find('.friends_item_name')[0].textContent;
+				//console.log('name: '+ name + 'cmp_name: ' + cmp_name);
+				//console.log(name < cmp_name);
 				if (name < cmp_name) {
 					jQuery(this).before(elem);
 					inserted = true;
+					return false;
 				}
 			});
 			if (!inserted) {
+				//console.log('2');	
 				// insert after last element of group
 				jQuery('.' + group).last().after(elem);
 			}
 		} else {
 			if (group == 'online'){
+				//console.log('3');	
 				jQuery('.' + group_other).first().before(elem);
 			} else if (group == 'offline'){
+				//console.log('4');	
 				jQuery('.' + group_other).last().after(elem);
 			}
 		}
@@ -213,7 +336,7 @@ type='subscribe'/>
 		if (group_el.length > 0) {
 			var inserted = false;
 			group_el.each(function () {
-				var cmp_name = jQuery(this).find('.friends_item_name')[0].innerText;
+				var cmp_name = jQuery(this).find('.friends_item_name')[0].textContent;
 				if (name < cmp_name) {
 					jQuery(this).before(to_insert);
 					inserted = true;
@@ -249,191 +372,28 @@ type='subscribe'/>
 		});
 	},
 	
-	
-	
-	
-	// console-related methods
-	log: function (msg) {
-		jQuery('#log').append("<p>" + msg + "</p>");
+	jid_to_id: function (jid) {
+		return Strophe.getBareJidFromJid(jid)
+			.replace(/@/g, "-")
+			.replace(/\./g, "-");
 	},
 	
-	clear_log: function (){
-		jQuery('#log').empty();
+	scroll_chat: function (jid_id) {
+		var div = jQuery('#chat_' + jid_id + ' .chat_messages').get(0);
+		div.scrollTop = div.scrollHeight;
 	},
-	
-	show_traffic: function (body, type) {
-        if (body.childNodes.length > 0) {
-            var console = jQuery('#console').get(0);
-            var at_bottom = console.scrollTop >= console.scrollHeight - console.clientHeight;
 
-            jQuery.each(body.childNodes, function () {
-                jQuery('#console').append("<div class='" + type + "'>" + 
-                                     Client.pretty_xml(this) +
-                                     "</div>");
-            });
-
-            if (at_bottom) {
-                console.scrollTop = console.scrollHeight;
-            }
-        }
-    },
-
-    pretty_xml: function (xml, level) {
-        var i, j;
-        var result = [];
-        if (!level) { 
-            level = 0;
-        }
-
-        result.push("<div class='xml_level" + level + "'>");
-        result.push("<span class='xml_punc'>&lt;</span>");
-        result.push("<span class='xml_tag'>");
-        result.push(xml.tagName);
-        result.push("</span>");
-
-        // attributes
-        var attrs = xml.attributes;
-        var attr_lead = []
-        for (i = 0; i < xml.tagName.length + 1; i++) {
-            attr_lead.push("&nbsp;");
-        }
-        attr_lead = attr_lead.join("");
-
-        for (i = 0; i < attrs.length; i++) {
-            result.push(" <span class='xml_aname'>");
-            result.push(attrs[i].nodeName);
-            result.push("</span><span class='xml_punc'>='</span>");
-            result.push("<span class='xml_avalue'>");
-            result.push(attrs[i].nodeValue);
-            result.push("</span><span class='xml_punc'>'</span>");
-
-            if (i !== attrs.length - 1) {
-                result.push("</div><div class='xml_level" + level + "'>");
-                result.push(attr_lead);
-            }
-        }
-
-        if (xml.childNodes.length === 0) {
-            result.push("<span class='xml_punc'>/&gt;</span></div>");
-        } else {
-            result.push("<span class='xml_punc'>&gt;</span></div>");
-
-            // children
-            jQuery.each(xml.childNodes, function () {
-                if (this.nodeType === 1) {
-                    result.push(Client.pretty_xml(this, level + 1));
-                } else if (this.nodeType === 3) {
-                    result.push("<div class='xml_text xml_level" + 
-                                (level + 1) + "'>");
-                    result.push(this.nodeValue);
-                    result.push("</div>");
-                }
-            });
-            
-            result.push("<div class='xml xml_level" + level + "'>");
-            result.push("<span class='xml_punc'>&lt;/</span>");
-            result.push("<span class='xml_tag'>");
-            result.push(xml.tagName);
-            result.push("</span>");
-            result.push("<span class='xml_punc'>&gt;</span></div>");
-        }
-        
-        return result.join("");
-    },
-
-    text_to_xml: function (text) {
-        var doc = null;
-        if (window['DOMParser']) {
-            var parser = new DOMParser();
-            doc = parser.parseFromString(text, 'text/xml');
-        } else if (window['ActiveXObject']) {
-            var doc = new ActiveXObject("MSXML2.DOMDocument");
-            doc.async = false;
-            doc.loadXML(text);
-        } else {
-            throw {
-                type: 'PeekError',
-                message: 'No DOMParser object found.'
-            };
-        }
-
-        var elem = doc.documentElement;
-        if (jQuery(elem).filter('parsererror').length > 0) {
-            return null;
-        }
-        return elem;
-    }
+	disconnect: function () {
+		Client.connection.sync = true; // Switch to using synchronous requests since this is typically called onUnload.
+	    Client.connection.flush();
+	    Client.connection.disconnect();
+	    return false;
+	}
 };
 
-
-// console buttons
-function console_disconnect() {
-	/*if (Client.roster.length > 0) {
-    	for (i = 0; i < Client.roster.length; ++i) {
-		    console.log("will send unavailable to " + Client.roster[i]);
-			Client.connection.send($pres({
-				to: Client.roster[i],
-				"type": "unavailable"}));
-		}
-	}*/ 
-	Client.connection.disconnect();
-	return false;
-}
-
-function console_send() {
-        var input = jQuery('#input').val();
-        var error = false;
-        if (input.length > 0) {
-            if (input[0] === '<') {
-                var xml = Client.text_to_xml(input);
-                if (xml) {
-                    Client.connection.send(Strophe.copyElement(xml));
-                    jQuery('#input').val('');
-                } else {
-                    error = true;
-                }
-            } else if (input[0] === '$') {
-                try {
-                    var builder = eval(input);
-                    Client.connection.send(builder);
-                    jQuery('#input').val('');
-                } catch (e) {
-                    console.log(e);
-                    error = true;
-                }
-            } else {
-                error = true;
-            }
-        }
-
-        if (error) {
-            jQuery('#input').animate({backgroundColor: "#faa"});
-        }
-}
-
-jQuery('#input').keypress(function () {
-	jQuery(this).css({backgroundColor: '#fff'});
+jQuery(window).unload(function() {
+  Client.disconnect();
 });
-
-
-// logging in
-function connect(jid, pass) {
-	Client.clear_log();
-	document.body.style.cursor = "wait";
-	if (jid==null && pass==null){
-		jQuery(document).trigger('connect', {
-			jid: jQuery('#welcome_form_jid').val() + "@" + jQuery('#welcome_form_select').val(),
-			password: jQuery('#welcome_form_pass').val(),
-			id: jQuery('#welcome_form_member_id').val()
-		});
-	} else {
-		jQuery(document).trigger('connect', {
-			jid: jid,
-			password: pass
-		});
-	} 
-	//jQuery('#welcome_form_pass').val('');
-}
 
 // connection
 jQuery(document).bind('connect', function (ev, data) {
@@ -445,10 +405,10 @@ jQuery(document).bind('connect', function (ev, data) {
 		var conn = new Strophe.Connection("http://bosh.metajack.im:5280/xmpp-httpbind");	
 			
 		conn.xmlInput = function (body) {
-		    Client.show_traffic(body, 'incoming');
+		    Console.show_traffic(body, 'incoming');
 		};
 		conn.xmlOutput = function (body) {
-		    Client.show_traffic(body, 'outgoing');
+		    Console.show_traffic(body, 'outgoing');
 		};
 		    
 		conn.connect(data.jid, data.password, function (status) {
@@ -514,15 +474,17 @@ jQuery(document).bind('connect', function (ev, data) {
 });
 
 
-// handlers
+// XMPP statuses
 jQuery(document).bind('connected', function (event, course_members_jids) {
 	console.log("Connection established.");	
-    var iq = $iq({type: 'get'}).c('query', {xmlns: 'jabber:iq:roster'});
-    Client.connection.sendIQ(iq, Client.on_roster);
-    // Client.connection.addHandler(Client.on_roster_changed, "jabber:iq:roster", "iq", "set");
-    // Client.connection.addHandler(Client.on_message, null, "message", "chat");
+	
+    var iq_roster = $iq({type: 'get'}).c('query', {xmlns: 'jabber:iq:roster'});
+    Client.connection.sendIQ(iq_roster, Client.on_roster);  
     
-    // send subscription request to all course members (on first login)
+    // Client.connection.addHandler(Client.on_roster_changed, "jabber:iq:roster", "iq", "set");
+    Client.connection.addHandler(Client.on_message, null, "message", "chat");
+    
+    // send subscription request to all course members (on first login course_members_jids.length > 0)
     if (course_members_jids.length > 0) {
     	for (i = 0; i < course_members_jids.length; ++i) {
 		    console.log("will send to " + course_members_jids[i]);
@@ -532,8 +494,8 @@ jQuery(document).bind('connected', function (event, course_members_jids) {
 		}
 	}    
 	
-	jQuery('.button').removeAttr('disabled');
-    jQuery('#input').removeClass('disabled').removeAttr('disabled');
+	jQuery('#buttonbar').find('input').removeAttr('disabled');
+    jQuery('#console_input').removeClass('disabled').removeAttr('disabled');
 	document.body.style.cursor = "auto";
 });
 
@@ -553,8 +515,8 @@ jQuery(document).bind('disconnected', function () {
 	// remove dead connection object
 	Client.connection = null;
 	
-	jQuery('.button').attr('disabled', 'disabled');
-    jQuery('#input').addClass('disabled').attr('disabled', 'disabled');
+	jQuery('#buttonbar').find('input').attr('disabled', 'disabled');
+    jQuery('#console_input').addClass('disabled').attr('disabled', 'disabled');
 	document.body.style.cursor = "auto";
 });
 
