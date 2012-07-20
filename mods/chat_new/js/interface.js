@@ -70,11 +70,7 @@ jQuery(function() {
 
 		// tabs init with a custom tab template and an "add" callback filling in the content
 		var jQuerysubtabs = jQuery( "#subtabs").tabs({
-			tabTemplate: "<li><a href='#{href}'>#{label}</a><span class='ui-icon ui-icon-close'>Remove Tab</span><span class='ui-icon ui-icon-close'>Remove Tab</span></li>",
-			add: function( event, ui ) {
-				var tab_content = jQuerytab_content_input.val() || "Tab " + tab_counter + " content.";
-				jQuery( ui.panel ).append( "<p>" + tab_content + "</p>" );
-			}
+			tabTemplate: "<li><a href='#{href}'>#{label}</a><span class='ui-icon ui-icon-minus' onclick='minimize_medium();'>Minimize Tab</span><span class='ui-icon ui-icon-close'>Remove Tab</span></li>"
 		});
 
 		// close icon: removing the tab on click

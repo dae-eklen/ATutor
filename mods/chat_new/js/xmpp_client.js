@@ -386,7 +386,7 @@ var Client = {
 		});
 	},
 	
-	message_to_db: function (from, to, msg, timestamp) {		
+	message_to_db: function (from, to, msg, timestamp) {
 		var dataString = 'from=' + from + '&to=' + to + '&msg=' + msg + '&timestamp=' + timestamp;
 		jQuery.ajax({
 			type: "POST",
@@ -394,7 +394,9 @@ var Client = {
 			data: dataString,
 			cache: false,
 			success: function (returned) {
-				console.log(returned);
+				if (returned != 1) {
+					console.log('An error while saving message into database occured.');
+				}
 			},
 			error: function (xhr, errorType, exception) {
 			    console.log("error: " + exception);
