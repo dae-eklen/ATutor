@@ -20,6 +20,43 @@ $_custom_head .= '<script type="text/javascript" src="https://ajax.googleapis.co
 $_custom_css = $_base_path.'mods/chat_new/module.css'; // use a custom stylesheet
 require (AT_INCLUDE_PATH.'header.inc.php');
 
+//	$from = 'dae-eklen-test2@talkr.im';
+//	$to = 'dae-eklen-test@talkr.im';
+//	
+//	$offset = 20;
+//	
+//	$sql = "SELECT * FROM (SELECT * FROM ".TABLE_PREFIX."chat_messages C 
+//		WHERE 
+//		(C.to='".$to."' OR C.to='".$from."') AND (C.from='".$from."' OR C.from='".$to."') 
+//		ORDER BY timestamp DESC LIMIT ".$offset.",10) AS res ORDER BY timestamp ASC";
+//		
+//	$html = '';
+//	$result = mysql_query($sql, $db);
+//
+//	while($row = mysql_fetch_assoc($result)){
+//		$sql_from = "SELECT first_name, last_name, member_id FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."members M USING (member_id) 
+//				WHERE C.jid='".$row[from]."'";
+//		$result_from = mysql_query($sql_from, $db);
+//		$row_from = mysql_fetch_assoc($result_from);
+//		
+//		$html .= "<hr/><table><tr>" . 
+//         					"<td  class='conversations_picture'>" . 
+//                            "<img class='picture' src='" .$_base_path. "get_profile_img.php?id=" .$row_from[member_id]. "' alt='userphoto'/>" . 
+//                        	"</td>" .
+//                        	
+//                        	"<td  class='conversations_middle'>" . 
+//                        	"<label class='conversations_name'><a href='profile.php?id=" .$row_from[member_id]. "'>" .$row_from[first_name] . ' ' . $row_from[last_name]. "</a></label>" . 
+//                        	"<div class='conversations_msg'>"  .$row[msg].  
+//							"</div>" . 
+//                        	"</td>" . 
+//                        	
+//                        	"<td class='conversations_time'>" . 
+//                        	$row[timestamp].                            
+//                        	"</td>" . 
+//                 "</tr></table>";
+//	}	
+//	echo $html;
+
 ?>
 	<div id="welcome" class="fl-container-flex90">
 		Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
@@ -97,6 +134,7 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 	    
 	    refreshForm();
 	    hide_div(<?php echo $_SESSION['member_id']; ?>);
+	    
 	</script>
 
 <?php require (AT_INCLUDE_PATH.'footer.inc.php'); ?>

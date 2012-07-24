@@ -174,8 +174,13 @@ var Client = {
 	on_message: function (message) {		
 		var from = jQuery(message).attr('from');
 		var from_bare = Strophe.getBareJidFromJid(from);
+		var to_bare = Strophe.getBareJidFromJid(jQuery(message).attr('to'));
 		var jid_id = Client.jid_to_id(from_bare);
+		
 		var sender_name = jQuery("div").filter(document.getElementById(from_bare)).find('.friends_item_name').text();
+		var sender_img_src = jQuery("div").filter(document.getElementById(from_bare)).find('.friends_item_picture').attr("src");
+		var sender_id = document.getElementById(from_bare).getElementsByTagName('table')[0].id;
+		var timestamp = +new Date;
 		
 		// do nothing if received data is not from course members
 		if (Client.check_membership(from_bare) == false) {
@@ -221,6 +226,7 @@ var Client = {
 		}
 
 		if (body) {
+			var id = jQuery("div").filter(document.getElementById(from_bare)).find('.friends_item').attr('id');
 			if (jQuery('#chat_' + jid_id).length === 0) {
 				jQuery('#subtabs').tabs('add', '#chat_' + jid_id, sender_name);
 				jQuery('#chat_' + jid_id).append(
@@ -230,41 +236,68 @@ var Client = {
 						"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + from_bare + "'></textarea></td>" +
 						"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/></td>" +
 					"</tr></table>");
+
+				// load older messages
+				var dataString = 'from=' + from_bare + '&to=' + to_bare;
+				jQuery.ajax({
+					type: "POST",
+					url: "ATutor/mods/chat_new/ajax/get_older_messages.php",
+					data: dataString,
+					cache: false,
+					success: function (data) {
+						var timestamps = jQuery(data).find('.conversations_time');
+						timestamps.each(function () {
+							var timestamp = Number(jQuery(this).text());
+							data = data.replace(timestamp, "<nobr>" + moment(timestamp).format('DD.MM.YY') + "</nobr><br/><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>");
+						});
+						
+						jQuery('#chat_' + jid_id + ' .chat_messages').append(data);
+						
+						// binding function that will retrieve older messages on scrollTop
+						jQuery('#chat_' + jid_id + ' .chat_messages').scroll(function(){
+							if (jQuery(this).scrollTop() == 0) {						
+								var real_height = jQuery('#chat_' + jid_id + ' .chat_messages').get(0).scrollHeight;
+								
+								// load older messages
+								var offset = jQuery('#chat_' + jid_id + ' .chat_messages').find('table').length;
+								var jid = jQuery(this).parent().find('textarea').attr('id').slice(5, jQuery('.chat_messages').parent().find('textarea').attr('id').length);
+								var dataString = 'from=' + jid + '&to=' + Strophe.getBareJidFromJid(Client.my_full_jid) + '&offset=' + offset;
+								jQuery.ajax({
+									type: "POST",
+									url: "ATutor/mods/chat_new/ajax/get_older_messages.php",
+									data: dataString,
+									cache: false,
+									success: function (data) {
+										var timestamps = jQuery(data).find('.conversations_time');
+										timestamps.each(function () {
+											var timestamp = Number(jQuery(this).text());
+											data = data.replace(timestamp, "<nobr>" + moment(timestamp).format('DD.MM.YY') + "</nobr><br/><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>");
+										});
+										
+										jQuery('#chat_' + jid_id + ' .chat_messages').prepend(data);
+										
+										var real_height_after = jQuery('#chat_' + jid_id + ' .chat_messages').get(0).scrollHeight;
+										jQuery('#chat_' + jid_id + ' .chat_messages').scrollTop(real_height_after - real_height);
+									},
+									error: function (xhr, errorType, exception) {
+									    console.log("error: " + exception);
+									}		
+								});
+							}
+						});  
+						
+						jQuery('#subtabs').tabs('select', '#chat_' + jid_id);
+						jQuery('#chat_' + jid_id + ' textarea').focus();
+						Client.scroll_chat(jid_id);
+					},
+					error: function (xhr, errorType, exception) {
+					    console.log("error: " + exception);
+					}		
+				});
+			} else {
+				// add the new message
+				Client.append_new_msg(sender_img_src, sender_id, sender_name, body, timestamp, jid_id, from);
 			}
-			jQuery('#chat_' + jid_id).data('jid', from);
-			//console.log('msg: got new res - ' + from);
-			
-			jQuery('#subtabs').tabs('select', '#chat_' + jid_id);
-			jQuery('#chat_' + jid_id + ' textarea').focus();
-			
-			// remove notifications since user is now active
-			jQuery('#chat_' + jid_id + ' .chat_messages').parent().find('.chat_event').text('');
-
-			// add the new message
-			var sender_img_src = jQuery("div").filter(document.getElementById(from_bare)).find('.friends_item_picture').attr("src");
-			var sender_id = document.getElementById(from_bare).getElementsByTagName('table')[0].id;	
-			var timestamp = +new Date;		
-			jQuery('#chat_' + jid_id + ' .chat_messages').append(
-						"<hr/><table><tr>" + 
-         					"<td  class='conversations_picture'>" + 
-                            "<img class='picture' src='" + sender_img_src + "' alt='userphoto'/>" + 
-                        	"</td>" + 
-                        	
-                        	"<td  class='conversations_middle'>" + 
-                        	"<label class='conversations_name'><a href='profile.php?id=" + sender_id + "'>" + sender_name + "</a></label>" + 
-                        	"<div class='conversations_msg'>" + body + 
-							"</div>" + 
-                        	"</td>" + 
-                        	
-                        	"<td class='conversations_time'>" + 
-                        	"<span><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></span> " +                            
-                        	"</td>" + 
-                        "</tr></table>");
-                        
-            // make db entry for message
-            Client.message_to_db(from_bare, Strophe.getBareJidFromJid(jQuery(message).attr('to')), body, timestamp);
-
-			Client.scroll_chat(jid_id);
 		}
 		return true;
 	},
@@ -309,13 +342,10 @@ var Client = {
 		jQuery('#roster')[0].removeChild(elem);
 
 		if (group_el.length > 0) {
-			//console.log('1');			
 			var name = elem.getElementsByTagName("td")[1].textContent;
 			var inserted = false;
 			group_el.each(function () {
 				var cmp_name = jQuery(this).find('.friends_item_name')[0].textContent;
-				//console.log('name: '+ name + 'cmp_name: ' + cmp_name);
-				//console.log(name < cmp_name);
 				if (name < cmp_name) {
 					jQuery(this).before(elem);
 					inserted = true;
@@ -323,16 +353,13 @@ var Client = {
 				}
 			});
 			if (!inserted) {
-				//console.log('2');	
 				// insert after last element of group
 				jQuery('.' + group).last().after(elem);
 			}
 		} else {
 			if (group == 'online'){
-				//console.log('3');	
 				jQuery('.' + group_other).first().before(elem);
 			} else if (group == 'offline'){
-				//console.log('4');	
 				jQuery('.' + group_other).last().after(elem);
 			}
 		}
@@ -402,12 +429,45 @@ var Client = {
 			    console.log("error: " + exception);
 			}		
 		});
-	}, 
-	
+	},
+		
 	jid_to_id: function (jid) {
 		return Strophe.getBareJidFromJid(jid)
 			.replace(/@/g, "-")
 			.replace(/\./g, "-");
+	},
+	
+	append_new_msg: function (sender_img_src, sender_id, sender_name, body, timestamp, jid_id, from) {	
+		jQuery('#chat_' + jid_id + ' .chat_messages').append(
+						"<hr/><table><tr>" + 
+         					"<td  class='conversations_picture'>" + 
+                            "<img class='picture' src='" + sender_img_src + "' alt='userphoto'/>" + 
+                        	"</td>" + 
+                        	
+                        	"<td  class='conversations_middle'>" + 
+                        	"<label class='conversations_name'><a href='profile.php?id=" + sender_id + "'>" + sender_name + "</a></label>" + 
+                        	"<div class='conversations_msg'>" + body + 
+							"</div>" + 
+                        	"</td>" + 
+                        	
+                        	"<td class='conversations_time'>" + 
+                        	"<span><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></span> " +                            
+                        	"</td>" + 
+                        "</tr></table>");
+                        
+	    jQuery('#chat_' + jid_id).data('jid', from);
+		//console.log('msg: got new res - ' + from);
+				
+		jQuery('#subtabs').tabs('select', '#chat_' + jid_id);
+		jQuery('#chat_' + jid_id + ' textarea').focus();
+				
+		// remove notifications since user is now active
+		jQuery('#chat_' + jid_id + ' .chat_messages').parent().find('.chat_event').text('');
+	                        
+	    // make db entry for message
+	    //Client.message_to_db(from_bare, Strophe.getBareJidFromJid(jQuery(message).attr('to')), body, timestamp);
+	
+		Client.scroll_chat(jid_id);
 	},
 	
 	scroll_chat: function (jid_id) {
@@ -455,7 +515,7 @@ jQuery(document).bind('connect', function (ev, data) {
 						url: "ATutor/mods/chat_new/ajax/check_auth.php",
 						data: dataString,
 						cache: false,
-						success: function (returned) {
+						success: function (returned) {							
 							if (returned == 0){
 								console.log('Error: Cannot insert!!.');
 								

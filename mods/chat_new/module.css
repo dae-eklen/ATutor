@@ -42,17 +42,17 @@ div.course div.shortcuts, a {text-align: left;}
 #subtabs hr {background-color:#c3c3c3; border:0px; margin:0px;}
 .conversations_middle {padding-top:2px; width: 100%;}
 .conversations_picture {padding:5px 0 5px 15px; width:32px;}
-.conversations_textarea {padding:5px !important; border-color:#c3c3c3; margin-bottom:15px; width:100%; resize:vertical; }
-.conversations_time {float: right; padding:6px 15px 0 0; color:#555;}
+.conversations_textarea {padding:5px !important; border-color:#c3c3c3; margin-bottom:15px; width:100%; resize:vertical; height:50px;}
+.conversations_time {float: right; padding:6px 15px 0 0; color:#555; font-size:0.8em;}
 .conversations_table {padding:0px !important; border:0px !important; background:#ECECEC; width:100%;}
 .conversations_table td { padding:0px !important; }
-.conversations_table td:last-child {padding:15px 0 0 10px !important; width:10%; vertical-align:top;}
+.conversations_table td:last-child {padding:15px 14px 0 10px !important; width:10%; vertical-align:top;}
 .conversations_table_spacer {width:61px;}
 .conversations_table_button input {cursor:pointer;}
 #tabs { margin-top: 1em; }
 #tabs li .ui-icon-close, #tabs li .ui-icon-minus { float: left; margin: 0.4em 0.2em 0 0; cursor: pointer; }
 .conversation_tab_wrap {display:inline-table;}
-.chat_messages {overflow:auto; max-height:300px;}
+.chat_messages {overflow:auto; height:300px;}
 .chat_event {height:15px; font-style:italic; font-size:0.8em;}
 
 

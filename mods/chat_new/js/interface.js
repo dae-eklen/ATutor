@@ -84,6 +84,8 @@ jQuery(function() {
 function minimize_medium(){
 	console.log("minimize_medium");
 }
+
+
 	
 // ================= friends
 function changeCategory(user){
@@ -173,6 +175,8 @@ function validateGroupname(){
 
 
 
+
+
 // ================= tabs
 jQuery('.friends_column_wrapper').live('click', function () {
 	// do nothing if clicked on self
@@ -183,6 +187,7 @@ jQuery('.friends_column_wrapper').live('click', function () {
 	var jid = jQuery(this).attr('id');
 	var name = jQuery(this).find('.friends_item_name').text();
 	var jid_id = Client.jid_to_id(jid);
+	var id = jQuery(this).find('.friends_item').attr('id');
 
 	if (jQuery('#chat_' + jid_id).length === 0) {
 		jQuery('#subtabs').tabs( "add", '#chat_' + jid_id, name);
@@ -194,9 +199,68 @@ jQuery('.friends_column_wrapper').live('click', function () {
 				"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/></td>" +
 			"</tr></table>");
 		jQuery('#chat_' + jid_id).data('jid', jid);
+		
+		// load older messages
+		var dataString = 'from=' + jid + '&to=' + Strophe.getBareJidFromJid(Client.my_full_jid);
+		jQuery.ajax({
+			type: "POST",
+			url: "ATutor/mods/chat_new/ajax/get_older_messages.php",
+			data: dataString,
+			cache: false,
+			success: function (data) {
+				var timestamps = jQuery(data).find('.conversations_time');
+				timestamps.each(function () {
+					var timestamp = Number(jQuery(this).text());
+					data = data.replace(timestamp, "<nobr>" + moment(timestamp).format('DD.MM.YY') + "</nobr><br/><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>");
+				});
+				
+				jQuery('#chat_' + jid_id + ' .chat_messages').append(data);
+				
+				// binding function that will retrieve older messages on scrollTop
+				jQuery('#chat_' + jid_id + ' .chat_messages').scroll(function(){
+					if (jQuery(this).scrollTop() == 0) {						
+						var real_height = jQuery('#chat_' + jid_id + ' .chat_messages').get(0).scrollHeight;
+						
+						// load older messages
+						var offset = jQuery('#chat_' + jid_id + ' .chat_messages').find('table').length;
+						var jid = jQuery(this).parent().find('textarea').attr('id').slice(5, jQuery('.chat_messages').parent().find('textarea').attr('id').length);
+						var dataString = 'from=' + jid + '&to=' + Strophe.getBareJidFromJid(Client.my_full_jid) + '&offset=' + offset;
+						jQuery.ajax({
+							type: "POST",
+							url: "ATutor/mods/chat_new/ajax/get_older_messages.php",
+							data: dataString,
+							cache: false,
+							success: function (data) {
+								var timestamps = jQuery(data).find('.conversations_time');
+								timestamps.each(function () {
+									var timestamp = Number(jQuery(this).text());
+									data = data.replace(timestamp, "<nobr>" + moment(timestamp).format('DD.MM.YY') + "</nobr><br/><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>");
+								});
+								
+								jQuery('#chat_' + jid_id + ' .chat_messages').prepend(data);
+								
+								var real_height_after = jQuery('#chat_' + jid_id + ' .chat_messages').get(0).scrollHeight;
+								jQuery('#chat_' + jid_id + ' .chat_messages').scrollTop(real_height_after - real_height);
+							},
+							error: function (xhr, errorType, exception) {
+							    console.log("error: " + exception);
+							}		
+						});
+					}
+				});  
+								
+				jQuery('#subtabs').tabs('select', '#chat_' + jid_id);
+				jQuery('#chat_' + jid_id + ' textarea').focus();
+				Client.scroll_chat(jid_id);
+			},
+			error: function (xhr, errorType, exception) {
+			    console.log("error: " + exception);
+			}		
+		});
 	}
 	jQuery('#subtabs').tabs('select', '#chat_' + jid_id);
 	jQuery('#chat_' + jid_id + ' textarea').focus();
+	Client.scroll_chat(jid_id);
 });
 
 jQuery('.conversations_textarea').live('keypress', function (ev) {
@@ -220,6 +284,7 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 		
 		var my_img = jQuery('.me').find('.friends_item_picture').attr("src");
 		var my_id = jQuery('.me').find('table').attr('id');
+		var my_name = jQuery('.me').find('.friends_item_name')[0].textContent;
 		var timestamp = +new Date;
 		jQuery(this).parent().parent().parent().parent().parent().find('.chat_messages').append(
 				"<hr/><table><tr>" + 
@@ -228,7 +293,7 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
                         	"</td>" + 
                         	
                         	"<td  class='conversations_middle'>" + 
-                        	"<label class='conversations_name'><a href='profile.php?id=" + my_id + "'>" + "Me" + "</a></label>" + 
+                        	"<label class='conversations_name'><a href='profile.php?id=" + my_id + "'>" + my_name + "</a></label>" + 
                         	"<div class='conversations_msg'>" + body + 
 							"</div>" + 
                         	"</td>" + 
@@ -261,6 +326,7 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 // ================= send button
 jQuery('.conversations_send').live('click', function () {
 	var jid = jQuery(this).parent().parent().parent().parent().parent().data('jid');
+	var jid_id = Client.jid_to_id(Strophe.getBareJidFromJid(jid));
 	var body = jQuery(this).parent().parent().find('td').find('textarea').val();
 	if (body == '') {
 		jQuery(this).parent().parent().find('td').find('textarea').focus();
@@ -277,6 +343,7 @@ jQuery('.conversations_send').live('click', function () {
 	
 	var my_img = jQuery('.me').find('.friends_item_picture').attr("src");
 	var my_id = jQuery('.me').find('table').attr('id');
+	var my_name = jQuery('.me').find('.friends_item_name')[0].textContent;
 	var timestamp = +new Date;	
 	jQuery(this).parent().parent().parent().parent().parent().find('.chat_messages').append(
 				"<hr/><table><tr>" + 
@@ -285,7 +352,7 @@ jQuery('.conversations_send').live('click', function () {
                         	"</td>" + 
                         	
                         	"<td  class='conversations_middle'>" + 
-                        	"<label class='conversations_name'><a href='profile.php?id=" + my_id + "'>" + "Me" + "</a></label>" + 
+                        	"<label class='conversations_name'><a href='profile.php?id=" + my_id + "'>" + my_name + "</a></label>" + 
                         	"<div class='conversations_msg'>" + body + 
 							"</div>" + 
                         	"</td>" + 
@@ -296,6 +363,7 @@ jQuery('.conversations_send').live('click', function () {
                         "</tr></table>");
     jQuery(this).parent().parent().find('td').find('textarea').focus();
     jQuery(this).parent().parent().find('td').find('textarea').val('');
+    Client.scroll_chat(jid_id);
     
     // make db entry for message
     Client.message_to_db(Strophe.getBareJidFromJid(Client.my_full_jid), Strophe.getBareJidFromJid(jid), body, timestamp);	
@@ -320,7 +388,6 @@ function connect(jid, pass) {
 	} 
 	//jQuery('#welcome_form_pass').val('');
 }
-
 
 
 
