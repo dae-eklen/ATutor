@@ -88,21 +88,40 @@ function minimize_medium(){
 
 	
 // ================= friends
-function changeCategory(user){
-	var clickedUser = document.getElementById(user);
-	var friendsList = document.getElementById("friends_list");
-	var friendsMembers = document.getElementById("friends_members");
+jQuery('.friends_column_wrapper_classmates').live('click', function () {
+	var friendsList = jQuery("#friends_list");
+	var friendsMembers = jQuery("#friends_members");
+	var clicked = jQuery(this);
 	
-	if (clickedUser.parentNode == friendsList){
-		friendsList.removeChild(clickedUser);
-		friendsMembers.appendChild(clickedUser);
+	if (jQuery(this).parent().attr('id') == friendsList.attr('id')){
+		friendsList[0].removeChild(jQuery(this)[0]);
+		replace_friend(clicked, friendsMembers);
 	}
-	else if (clickedUser.parentNode == friendsMembers){
-		friendsMembers.removeChild(clickedUser);
-		friendsList.appendChild(clickedUser);
+	else if (jQuery(this).parent().attr('id') == friendsMembers.attr('id')){
+		friendsMembers[0].removeChild(jQuery(this)[0]);
+		replace_friend(clicked, friendsList);
 	}
 	
-	refreshForm()
+	refreshForm();
+});
+
+function replace_friend(clicked, to){
+	if (to.find('div').length > 0) {
+		var name_roster = clicked.find("td")[1].textContent;
+		var inserted = false;
+		to.find('div').each(function () {
+			var cmp_name = jQuery(this).find('.friends_item_name')[0].textContent;
+			if (name_roster < cmp_name) {
+				jQuery(this).before(clicked);
+				inserted = true;
+			}
+		});
+		if (!inserted) {
+			to.append(clicked);
+		}
+	} else {
+		to.append(clicked);
+	}
 }
 
 function refreshForm(){
@@ -110,19 +129,19 @@ function refreshForm(){
 	if (friendsMembers){
 		document.getElementById("nr_of_members").innerHTML = friendsMembers.childNodes.length - 2;
 		
-		if (friendsMembers.childNodes.length - 2 == 0){
+		if (friendsMembers.childNodes.length - 2 == 1){
 			document.getElementById("groupname").disabled = true;
 			document.getElementById("friends_selected_bnt").disabled = true;
 			document.getElementById("friends_selected_label").style.color = '#555';
 		}
-		else if (friendsMembers.childNodes.length - 2 == 1){
+		else if (friendsMembers.childNodes.length - 2 == 2){
 			document.getElementById("groupname").disabled = true;
 			if (validateGroupname() == false){
 				document.getElementById("friends_selected_bnt").disabled = false;
 			document.getElementById("friends_selected_label").style.color = '#555';
 			}
 		}
-		else if (friendsMembers.childNodes.length - 2 >= 2){
+		else if (friendsMembers.childNodes.length - 2 >= 3){
 			document.getElementById("groupname").disabled = false;
 			if (validateGroupname() == false){
 				document.getElementById("friends_selected_bnt").disabled = true;
@@ -150,6 +169,61 @@ function validateGroupname(){
 	}
 }
 
+jQuery('#friends_selected_bnt').live('click', function () {
+	if (jQuery('#friends_members').find('div').length == 2) {
+		var jid = jQuery('#friends_members').find('.friends_column_wrapper_classmates').attr('id').slice(11, jQuery('#friends_members').find('.friends_column_wrapper_classmates').attr('id').length);
+		var jid_id = Client.jid_to_id(jid);
+		var name = jQuery('#friends_members').find('.friends_column_wrapper_classmates').find('.friends_item_name').text();
+	
+		if (jQuery('#chat_' + jid_id).length === 0) {
+			jQuery('#subtabs').tabs( "add", '#chat_' + jid_id, name);
+			jQuery('#chat_' + jid_id).append(
+				"<div class='chat_messages'></div><hr/>" +
+				"<table class='conversations_table'><tr>" +
+					"<td class='conversations_table_spacer'></td>" +
+					"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + jid + "'></textarea></td>" +
+					"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/></td>" +
+				"</tr></table>");
+			jQuery('#chat_' + jid_id).data('jid', jid);
+			
+			// load older messages
+			Client.load_older_messages(jid, Strophe.getBareJidFromJid(Client.my_full_jid), jid_id);
+			
+		}
+		Client.focus_chat(jid_id);
+		Client.scroll_chat(jid_id);
+		
+	} else if (jQuery('#friends_members').find('div').length > 2) {
+		var jids = new Array();
+		jQuery('#friends_members').find('.friends_column_wrapper_classmates').each(function () {
+			jids.push(jQuery(this).attr('id').slice(11, jQuery(this).attr('id').length));
+		});
+		var groupname = jQuery('#friends').find('#groupname').val();
+		
+		if (groupname == ''){
+			return;
+		} else if (groupname.indexOf(' ') >= 0) {
+			alert('Group name should not contain spaces.');
+			jQuery('#friends').find('#groupname').focus();
+			return;
+		}
+		
+		if (Client.mucs[groupname + "@conference.talkr.im"] == undefined) {
+			var my_groupname = jQuery('.me').find('.friends_item_name')[0].textContent;
+			
+			
+			Client.connection.send($pres({
+				to: groupname + "@conference.talkr.im/" + my_groupname
+			}).c('x', {xmlns: "http://jabber.org/protocol/muc"}));
+			
+			Client.mucs[groupname + "@conference.talkr.im"] = { "joined":false, "participants":new Array(), "nickname":my_groupname};
+		} else {
+			var jid_id = Client.jid_to_id(groupname + "@conference.talkr.im");
+			Client.focus_chat(jid_id);
+			Client.scroll_chat(jid_id);
+		}
+	}
+});
 
 // ================= settings help
 	jQuery(function() {
@@ -187,7 +261,6 @@ jQuery('.friends_column_wrapper').live('click', function () {
 	var jid = jQuery(this).attr('id');
 	var name = jQuery(this).find('.friends_item_name').text();
 	var jid_id = Client.jid_to_id(jid);
-	var id = jQuery(this).find('.friends_item').attr('id');
 
 	if (jQuery('#chat_' + jid_id).length === 0) {
 		jQuery('#subtabs').tabs( "add", '#chat_' + jid_id, name);
@@ -201,65 +274,10 @@ jQuery('.friends_column_wrapper').live('click', function () {
 		jQuery('#chat_' + jid_id).data('jid', jid);
 		
 		// load older messages
-		var dataString = 'from=' + jid + '&to=' + Strophe.getBareJidFromJid(Client.my_full_jid);
-		jQuery.ajax({
-			type: "POST",
-			url: "ATutor/mods/chat_new/ajax/get_older_messages.php",
-			data: dataString,
-			cache: false,
-			success: function (data) {
-				var timestamps = jQuery(data).find('.conversations_time');
-				timestamps.each(function () {
-					var timestamp = Number(jQuery(this).text());
-					data = data.replace(timestamp, "<nobr>" + moment(timestamp).format('DD.MM.YY') + "</nobr><br/><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>");
-				});
-				
-				jQuery('#chat_' + jid_id + ' .chat_messages').append(data);
-				
-				// binding function that will retrieve older messages on scrollTop
-				jQuery('#chat_' + jid_id + ' .chat_messages').scroll(function(){
-					if (jQuery(this).scrollTop() == 0) {						
-						var real_height = jQuery('#chat_' + jid_id + ' .chat_messages').get(0).scrollHeight;
-						
-						// load older messages
-						var offset = jQuery('#chat_' + jid_id + ' .chat_messages').find('table').length;
-						var jid = jQuery(this).parent().find('textarea').attr('id').slice(5, jQuery('.chat_messages').parent().find('textarea').attr('id').length);
-						var dataString = 'from=' + jid + '&to=' + Strophe.getBareJidFromJid(Client.my_full_jid) + '&offset=' + offset;
-						jQuery.ajax({
-							type: "POST",
-							url: "ATutor/mods/chat_new/ajax/get_older_messages.php",
-							data: dataString,
-							cache: false,
-							success: function (data) {
-								var timestamps = jQuery(data).find('.conversations_time');
-								timestamps.each(function () {
-									var timestamp = Number(jQuery(this).text());
-									data = data.replace(timestamp, "<nobr>" + moment(timestamp).format('DD.MM.YY') + "</nobr><br/><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>");
-								});
-								
-								jQuery('#chat_' + jid_id + ' .chat_messages').prepend(data);
-								
-								var real_height_after = jQuery('#chat_' + jid_id + ' .chat_messages').get(0).scrollHeight;
-								jQuery('#chat_' + jid_id + ' .chat_messages').scrollTop(real_height_after - real_height);
-							},
-							error: function (xhr, errorType, exception) {
-							    console.log("error: " + exception);
-							}		
-						});
-					}
-				});  
-								
-				jQuery('#subtabs').tabs('select', '#chat_' + jid_id);
-				jQuery('#chat_' + jid_id + ' textarea').focus();
-				Client.scroll_chat(jid_id);
-			},
-			error: function (xhr, errorType, exception) {
-			    console.log("error: " + exception);
-			}		
-		});
+		Client.load_older_messages(jid, Strophe.getBareJidFromJid(Client.my_full_jid), jid_id);
+		
 	}
-	jQuery('#subtabs').tabs('select', '#chat_' + jid_id);
-	jQuery('#chat_' + jid_id + ' textarea').focus();
+	Client.focus_chat(jid_id);
 	Client.scroll_chat(jid_id);
 });
 
@@ -276,46 +294,57 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 			return;
 		}
 		
-		var message = $msg({to: jid, "type": "chat"})
-			.c('body').t(body).up()
-			.c('active', {xmlns: "http://jabber.org/protocol/chatstates"});
-		Client.connection.send(message);
-		
-		
-		var my_img = jQuery('.me').find('.friends_item_picture').attr("src");
-		var my_id = jQuery('.me').find('table').attr('id');
-		var my_name = jQuery('.me').find('.friends_item_name')[0].textContent;
 		var timestamp = +new Date;
-		jQuery(this).parent().parent().parent().parent().parent().find('.chat_messages').append(
-				"<hr/><table><tr>" + 
-         					"<td  class='conversations_picture'>" + 
-                            "<img class='picture' src='" + my_img + "' alt='userphoto'/>" + 
-                        	"</td>" + 
-                        	
-                        	"<td  class='conversations_middle'>" + 
-                        	"<label class='conversations_name'><a href='profile.php?id=" + my_id + "'>" + my_name + "</a></label>" + 
-                        	"<div class='conversations_msg'>" + body + 
-							"</div>" + 
-                        	"</td>" + 
-                        	
-                        	"<td class='conversations_time'>" + 
-                        	"<span><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></span> " +                            
-                        	"</td>" + 
-                        "</tr></table>");
-					
-		Client.scroll_chat(Client.jid_to_id(jid));
-		jQuery(this).val('');
-		jQuery(this).parent().parent().parent().parent().parent().data('composing', false);
 		
-		// make db entry for message
- 		Client.message_to_db(Strophe.getBareJidFromJid(Client.my_full_jid), Strophe.getBareJidFromJid(jid), body, timestamp);
- 		
+		if (jid.search("@conference.talkr.im") == -1) {
+			// chat
+			var message = $msg({to: jid, "type": "chat"}).c('body').t(body).up()
+				.c('active', {xmlns: "http://jabber.org/protocol/chatstates"});	
+			
+			var my_img = jQuery('.me').find('.friends_item_picture').attr("src");
+			var my_id = jQuery('.me').find('table').attr('id');
+			var my_name = jQuery('.me').find('.friends_item_name')[0].textContent;
+			
+			jQuery(this).parent().parent().parent().parent().parent().find('.chat_messages').append(
+					"<hr/><table><tr>" + 
+	         					"<td  class='conversations_picture'>" + 
+	                            "<img class='picture' src='" + my_img + "' alt='userphoto'/>" + 
+	                        	"</td>" + 
+	                        	
+	                        	"<td  class='conversations_middle'>" + 
+	                        	"<label class='conversations_name'><a href='profile.php?id=" + my_id + "'>" + my_name + "</a></label>" + 
+	                        	"<div class='conversations_msg'>" + body + 
+								"</div>" + 
+	                        	"</td>" + 
+	                        	
+	                        	"<td class='conversations_time'>" + 
+	                        	"<span><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></span> " +                            
+	                        	"</td>" + 
+	                        "</tr></table>");
+						
+			Client.scroll_chat(Client.jid_to_id(jid));
+			jQuery(this).parent().parent().parent().parent().parent().data('composing', false);
+			
+			var groupchat = 0;
+	 	} else {
+	 		// muc
+	 		var message = $msg({to: jid, type: "groupchat"}).c('body').t(body);
+	 		var groupchat = 1;
+	 	}
+	 	jQuery(this).val('');
+	 	
+	 	// make db entry for message
+	 	Client.message_to_db(Strophe.getBareJidFromJid(Client.my_full_jid), Strophe.getBareJidFromJid(jid), body, timestamp, groupchat);
+	 	
+	 	Client.connection.send(message);
+	 	
 	} else {
 		var composing = jQuery(this).parent().parent().parent().parent().parent().data('composing');
 		if (!composing) {
-			var notify = $msg({to: jid, "type": "chat"})
-				.c('composing', {xmlns: "http://jabber.org/protocol/chatstates"});
-			Client.connection.send(notify);
+			if (jid.search("@conference.talkr.im") == -1) {
+				var notify = $msg({to: jid, "type": "chat"}).c('composing', {xmlns: "http://jabber.org/protocol/chatstates"});
+				Client.connection.send(notify);
+			}
 
 			jQuery(this).parent().parent().parent().parent().parent().data('composing', true);
 		}
@@ -336,39 +365,67 @@ jQuery('.conversations_send').live('click', function () {
 		return;
 	}
 	
-	var message = $msg({to: jid, "type": "chat"})
-		.c('body').t(body).up()
-		.c('active', {xmlns: "http://jabber.org/protocol/chatstates"});
-	Client.connection.send(message);
-	
-	var my_img = jQuery('.me').find('.friends_item_picture').attr("src");
-	var my_id = jQuery('.me').find('table').attr('id');
-	var my_name = jQuery('.me').find('.friends_item_name')[0].textContent;
 	var timestamp = +new Date;	
-	jQuery(this).parent().parent().parent().parent().parent().find('.chat_messages').append(
-				"<hr/><table><tr>" + 
-         					"<td  class='conversations_picture'>" + 
-                            "<img class='picture' src='" + my_img + "' alt='userphoto'/>" + 
-                        	"</td>" + 
-                        	
-                        	"<td  class='conversations_middle'>" + 
-                        	"<label class='conversations_name'><a href='profile.php?id=" + my_id + "'>" + my_name + "</a></label>" + 
-                        	"<div class='conversations_msg'>" + body + 
-							"</div>" + 
-                        	"</td>" + 
-                        	
-                        	"<td class='conversations_time'>" + 
-                        	"<span><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></span> " +                            
-                        	"</td>" + 
-                        "</tr></table>");
-    jQuery(this).parent().parent().find('td').find('textarea').focus();
-    jQuery(this).parent().parent().find('td').find('textarea').val('');
-    Client.scroll_chat(jid_id);
     
-    // make db entry for message
-    Client.message_to_db(Strophe.getBareJidFromJid(Client.my_full_jid), Strophe.getBareJidFromJid(jid), body, timestamp);	
+	if (jid.search("@conference.talkr.im") == -1) {
+		// chat
+		var message = $msg({to: jid, "type": "chat"}).c('body').t(body).up()
+			.c('active', {xmlns: "http://jabber.org/protocol/chatstates"});
+		
+		var my_img = jQuery('.me').find('.friends_item_picture').attr("src");
+		var my_id = jQuery('.me').find('table').attr('id');
+		var my_name = jQuery('.me').find('.friends_item_name')[0].textContent;
+		
+		jQuery(this).parent().parent().parent().parent().parent().find('.chat_messages').append(
+					"<hr/><table><tr>" + 
+	         					"<td  class='conversations_picture'>" + 
+	                            "<img class='picture' src='" + my_img + "' alt='userphoto'/>" + 
+	                        	"</td>" + 
+	                        	
+	                        	"<td  class='conversations_middle'>" + 
+	                        	"<label class='conversations_name'><a href='profile.php?id=" + my_id + "'>" + my_name + "</a></label>" + 
+	                        	"<div class='conversations_msg'>" + body + 
+								"</div>" + 
+	                        	"</td>" + 
+	                        	
+	                        	"<td class='conversations_time'>" + 
+	                        	"<span><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></span> " +                            
+	                        	"</td>" + 
+	                        "</tr></table>");
+	    jQuery(this).parent().parent().find('td').find('textarea').focus();
+	    Client.scroll_chat(jid_id);
+		
+		var groupchat = 0;
+ 	} else {
+ 		// muc
+ 		var message = $msg({to: jid, type: "groupchat"}).c('body').t(body);
+ 		var groupchat = 1;
+ 	}
+ 	jQuery(this).parent().parent().find('td').find('textarea').val('');
+ 	
+ 	// make db entry for message
+ 	Client.message_to_db(Strophe.getBareJidFromJid(Client.my_full_jid), Strophe.getBareJidFromJid(jid), body, timestamp, groupchat);
+ 	
+ 	Client.connection.send(message);
+ 	
 });
+// ================= leave_muc button
+jQuery('.conversations_leave_muc').live('click', function () {
+	jQuery(this).attr('disabled', 'disabled');
+	jQuery(this).parent().find('.conversations_send').attr('disabled', 'disabled');
+	
+	var jid = jQuery(this).parent().parent().find('.conversations_textarea').attr('id').slice(5, jQuery(this).parent().parent().find('.conversations_textarea').attr('id').length)
+	var my_groupname = Client.mucs[jid]["nickname"];
+	var jid_id = Client.jid_to_id(jid);
+	
+	Client.connection.send($pres({"to": jid + "/" + my_groupname, "nickname": my_groupname, "type": "unavailable"}));
 
+	Client.mucs[jid]["joined"] = false;	
+	jQuery('#chat_' + jid_id).find('li').remove(":contains('" + my_groupname + "')");
+	var timestamp = +new Date;
+	jQuery('#chat_' + jid_id + ' .chat_messages').append("<hr/><div class='notice'>" + moment(timestamp).format('HH:mm:ss ') + "You left the room</div>");
+	jQuery("#chat_" + jid_id).find(".muc_roster li").remove();
+});
 
 // ================= logging in
 function connect(jid, pass) {
