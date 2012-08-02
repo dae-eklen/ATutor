@@ -196,10 +196,25 @@ jQuery('#friends_selected_bnt').live('click', function () {
 	} else if (jQuery('#friends_members').find('div').length > 2) {
 		var jids = new Array();
 		jQuery('#friends_members').find('.friends_column_wrapper_classmates').each(function () {
-			jids.push(jQuery(this).attr('id').slice(11, jQuery(this).attr('id').length));
+			var nick = jQuery(this).find('.friends_item_name')[0].textContent;
+			// avoid nick repetitions
+			for (var i = 0; i < jids.length; i++) {
+				if (jids[i]["nick"] == nick) {
+					var nr = jids[i]["nick"].match(/\([0-99]\)/);
+					if (nr != null) {
+						nr = parseInt(nr[0].slice(0, nr[0].length-1).slice(1, nr[0].length))+1;
+						nick = nick.slice(0, nick.length -3) + "(" + nr + ")";
+						continue;
+					}
+					nick = nick + "(1)";
+					continue;
+				} 				
+			}
+			jids.push({"jid": jQuery(this).attr('id').slice(11, jQuery(this).attr('id').length), "nick": nick});
 		});
-		var groupname = jQuery('#friends').find('#groupname').val();
 		
+		var groupname = jQuery('#friends').find('#groupname').val();
+		var jid_id = Client.jid_to_id(groupname + "@conference.talkr.im");		
 		if (groupname == ''){
 			return;
 		} else if (groupname.indexOf(' ') >= 0) {
@@ -208,17 +223,23 @@ jQuery('#friends_selected_bnt').live('click', function () {
 			return;
 		}
 		
+		console.log("Client.mucs[groupname + '@conference.talkr.im'] == undefined: ", Client.mucs[groupname + "@conference.talkr.im"]);
+		
 		if (Client.mucs[groupname + "@conference.talkr.im"] == undefined) {
+		//if (jQuery('#chat_' + jid_id).length === 0) {
+			console.log('1');
 			var my_groupname = jQuery('.me').find('.friends_item_name')[0].textContent;
-			
 			
 			Client.connection.send($pres({
 				to: groupname + "@conference.talkr.im/" + my_groupname
 			}).c('x', {xmlns: "http://jabber.org/protocol/muc"}));
+			console.log('2');
+			Client.mucs[groupname + "@conference.talkr.im"] = { "joined":false, "participants":new Array(), "invites_to":jids, "nickname":my_groupname};
 			
-			Client.mucs[groupname + "@conference.talkr.im"] = { "joined":false, "participants":new Array(), "nickname":my_groupname};
-		} else {
-			var jid_id = Client.jid_to_id(groupname + "@conference.talkr.im");
+			console.log('3');
+
+		} else if (jQuery('#chat_' + jid_id).length !== 0) {
+			console.log('4');
 			Client.focus_chat(jid_id);
 			Client.scroll_chat(jid_id);
 		}
@@ -413,18 +434,21 @@ jQuery('.conversations_send').live('click', function () {
 jQuery('.conversations_leave_muc').live('click', function () {
 	jQuery(this).attr('disabled', 'disabled');
 	jQuery(this).parent().find('.conversations_send').attr('disabled', 'disabled');
+	jQuery(this).parent().parent().find('.conversations_textarea').attr('disabled', 'disabled');
 	
 	var jid = jQuery(this).parent().parent().find('.conversations_textarea').attr('id').slice(5, jQuery(this).parent().parent().find('.conversations_textarea').attr('id').length)
 	var my_groupname = Client.mucs[jid]["nickname"];
 	var jid_id = Client.jid_to_id(jid);
 	
-	Client.connection.send($pres({"to": jid + "/" + my_groupname, "nickname": my_groupname, "type": "unavailable"}));
-
-	Client.mucs[jid]["joined"] = false;	
+	delete Client.mucs[jid];
+	
 	jQuery('#chat_' + jid_id).find('li').remove(":contains('" + my_groupname + "')");
+	
 	var timestamp = +new Date;
 	jQuery('#chat_' + jid_id + ' .chat_messages').append("<hr/><div class='notice'>" + moment(timestamp).format('HH:mm:ss ') + "You left the room</div>");
 	jQuery("#chat_" + jid_id).find(".muc_roster li").remove();
+	
+	Client.connection.send($pres({"to": jid + "/" + my_groupname, "nickname": my_groupname, "type": "unavailable"}));
 });
 
 // ================= logging in
