@@ -223,23 +223,17 @@ jQuery('#friends_selected_bnt').live('click', function () {
 			return;
 		}
 		
-		console.log("Client.mucs[groupname + '@conference.talkr.im'] == undefined: ", Client.mucs[groupname + "@conference.talkr.im"]);
-		
 		if (Client.mucs[groupname + "@conference.talkr.im"] == undefined) {
 		//if (jQuery('#chat_' + jid_id).length === 0) {
-			console.log('1');
 			var my_groupname = jQuery('.me').find('.friends_item_name')[0].textContent;
 			
 			Client.connection.send($pres({
 				to: groupname + "@conference.talkr.im/" + my_groupname
 			}).c('x', {xmlns: "http://jabber.org/protocol/muc"}));
-			console.log('2');
+
 			Client.mucs[groupname + "@conference.talkr.im"] = { "joined":false, "participants":new Array(), "invites_to":jids, "nickname":my_groupname};
-			
-			console.log('3');
 
 		} else if (jQuery('#chat_' + jid_id).length !== 0) {
-			console.log('4');
 			Client.focus_chat(jid_id);
 			Client.scroll_chat(jid_id);
 		}

@@ -119,47 +119,6 @@ var Client = {
 			console.log("Client.subscribed- " + Client.subscribed + "; Client.subscribe-" + Client.subscribe);
 	},
 	
-	add_to_muc_list: function (user_jid, nick, group) {
-		console.log("ADDING: ", user_jid, nick, group);
-		if (Client.mucs[group]["participants"].indexOf(user_jid) == -1) {
-			Client.mucs[group]["participants"].push(user_jid);
-	
-			var group_id = Client.jid_to_id(group);
-			if (Client.mucs[group]["joined"] == true) {
-				var member_id = jQuery("div").filter(document.getElementById(user_jid)).find('.friends_item').attr('id');
-				var profile_link = "<a href='profile.php?id=" + member_id + "'>" + nick + "</a>";
-				jQuery("#chat_" + group_id).find(".muc_roster ul").append("<li>" + profile_link + "</li>");
-			}
-			
-			var timestamp = +new Date;
-			jQuery('#chat_' + group_id).find('.chat_messages').append("<hr/><div class='notice'>" + moment(timestamp).format('HH:mm:ss ') + nick + " entered the room</div>");
-			Client.focus_chat(group_id);
-			Client.scroll_chat(group_id);
-		}
-	},
-	
-	remove_from_muc_list: function (user_jid, nick, group) {
-		console.log("REMOVING - ", user_jid, nick, group);
-		
-		if (Client.mucs[group]["participants"].indexOf(user_jid) != -1) {
-			// remove from participants list
-			delete Client.mucs[group]["participants"][Client.mucs[group]["participants"].indexOf(user_jid)];
-			
-			var group_id = Client.jid_to_id(group);
-			jQuery("#chat_" + group_id).find(".muc_roster li").each(function () {
-				if (nick === jQuery(this).text()) {
-					jQuery(this).remove();
-				}
-			});
-			
-			var timestamp = +new Date;
-			jQuery('#chat_' + group_id).find('.chat_messages').append("<hr/><div class='notice'>" + moment(timestamp).format('HH:mm:ss ') + nick + " left the room</div>");
-			Client.focus_chat(group_id);
-			Client.scroll_chat(group_id);
-		}
-		
-	},
-	
 	on_presence: function (presence) {
 		var ptype = jQuery(presence).attr('type');
 		var from = jQuery(presence).attr('from');
@@ -178,7 +137,7 @@ var Client = {
 			console.log("presence from non-member: " + from_bare);
 			return true;
 		}
-
+		
 		var muc_pres = false;
 		if (jQuery(presence).find("item").attr('jid') != undefined) {
 			var jid_bare_from_muc = Strophe.getBareJidFromJid(jQuery(presence).find("item").attr('jid'));
@@ -205,6 +164,17 @@ var Client = {
 				// room join complete
 				console.log("muc presence, i'm member - room join complete");
 				jQuery(document).trigger('room_joined', from_bare);
+				
+				// http://xmpp.org/extensions/xep-0045.html#modifymember
+				// require member list
+				var request_id = Client.connection.sendIQ(
+			    	$iq({type: "get", to: from_bare})
+				        .c("query", {xmlns: 'http://jabber.org/protocol/muc#admin'})
+				           	.c("item", {affiliation: 'member'})
+			    );
+			    
+			    // handle room member list
+				Client.connection.addHandler(Client.on_room_member_list_on_join, null, "iq", "result", request_id);
 			}
 			
 			var user_jid = Strophe.getBareJidFromJid(jQuery(presence).find('item').attr('jid'));
@@ -214,6 +184,7 @@ var Client = {
 					// remove from participants list
 					console.log("muc presence, i'm member - remove from participants list");
 					Client.remove_from_muc_list(Strophe.getBareJidFromJid(jQuery(presence).find('item').attr('jid')), nick, from_bare);
+					
 				} else if (Client.mucs[from_bare]["nickname"] != nick){
 					// add to participant list
 					console.log("muc presence, i'm member - add to participant list");
@@ -237,9 +208,12 @@ var Client = {
 						console.log("muc presence, i'm owner - handle muc config form");
 						Client.connection.addHandler(Client.on_room_form, null, "iq", "result", request_id);
 					}
-
+				}
+				
+				if (Client.mucs[from_bare]["joined"] == false) {
 					// room join complete
 					jQuery(document).trigger('room_joined', from_bare);
+					
 				}
 			}
 			
@@ -260,7 +234,7 @@ var Client = {
 
 			
 			
-		} else {
+		} else if (from.indexOf('@conference.talkr.im') == -1) {
 			// contact presence
 			console.log("contact presence", 
 				jQuery(presence).find("item[affiliation='owner']").length, 
@@ -273,19 +247,19 @@ var Client = {
 
 				if (ptype === 'unavailable' && jQuery("div").filter(contact_roster).data('full_jid') == from) {
 					// ATutor chat user
-					//console.log(from + ' unavailable from ATutor chat');
+					console.log(from + ' unavailable from ATutor chat');
 					online = false;
 				} else if (ptype === 'unavailable' && jQuery("div").filter(contact_roster).data('full_jid') == undefined) {
 					// other client user
-					//console.log(from + ' unavailable from other client');
+					console.log(from + ' unavailable from other client');
 					online = false;
 				} else {
 					var show = jQuery(presence).find("show").text();
 					if (show === "" || show === "chat") {
-						//console.log(from + ' online');
+						console.log(from + ' online');
 						online = true;
 					} else {
-						//console.log(from + ' away', 'show: ' + show);
+						console.log(from + ' away', 'show: ' + show);
 						online = true;
 					}					
 				}	
@@ -384,7 +358,7 @@ var Client = {
 			var request_id = Client.connection.sendIQ(
 	        	$iq({type: "set", to: from})
 		            .c("query", {xmlns: 'http://jabber.org/protocol/muc#admin'})
-		            	.c("item", {affiliation: 'member', jid: jid, nick: nick})
+		            	.c("item", {affiliation: 'admin', jid: jid, nick: nick})
 	        );
 	        
 	        // send invites
@@ -397,6 +371,10 @@ var Client = {
 		}
         
 		return false;
+	},
+	
+	on_room_member_list_on_join: function (iq) {
+		console.log("member list: ", iq);
 	},
 	
 	on_muc_invite: function (message) {
@@ -580,6 +558,59 @@ var Client = {
 	
 		
 	// helpers
+	add_to_muc_list: function (user_jid, nick, group) {
+		if (Client.mucs[group]["participants"].indexOf(user_jid) == -1) {
+			Client.mucs[group]["participants"].push(user_jid);
+	
+			var group_id = Client.jid_to_id(group);
+			if (Client.mucs[group]["joined"] == true) {
+				var member_id = jQuery("div").filter(document.getElementById(user_jid)).find('.friends_item').attr('id');
+				var profile_link = "<a href='profile.php?id=" + member_id + "'>" + nick + "</a>";
+				
+				if (jQuery("#chat_" + group_id).find(".muc_roster li").length > 0) {
+					var inserted = false;
+					jQuery("#chat_" + group_id).find(".muc_roster li").each(function () {
+						var cmp_name = jQuery(this)[0].textContent;
+						if (nick < cmp_name) {
+							jQuery(this).before("<li>" + profile_link + "</li>");
+							inserted = true;
+						}
+					});
+					if (!inserted) {
+						jQuery("#chat_" + group_id).find(".muc_roster ul").append("<li>" + profile_link + "</li>");
+					}
+				} else {
+					jQuery("#chat_" + group_id).find(".muc_roster ul").append("<li>" + profile_link + "</li>");
+				}
+			}
+			
+			var timestamp = +new Date;
+			jQuery('#chat_' + group_id).find('.chat_messages').append("<hr/><div class='notice'>" + moment(timestamp).format('HH:mm:ss ') + nick + " entered the room</div>");
+			Client.focus_chat(group_id);
+			Client.scroll_chat(group_id);
+		}
+	},
+	
+	remove_from_muc_list: function (user_jid, nick, group) {
+		if (Client.mucs[group]["participants"].indexOf(user_jid) != -1) {
+			// remove from participants list
+			delete Client.mucs[group]["participants"][Client.mucs[group]["participants"].indexOf(user_jid)];
+			
+			var group_id = Client.jid_to_id(group);
+			jQuery("#chat_" + group_id).find(".muc_roster li").each(function () {
+				if (nick === jQuery(this).text()) {
+					jQuery(this).remove();
+				}
+			});
+			
+			var timestamp = +new Date;
+			jQuery('#chat_' + group_id).find('.chat_messages').append("<hr/><div class='notice'>" + moment(timestamp).format('HH:mm:ss ') + nick + " left the room</div>");
+			Client.focus_chat(group_id);
+			Client.scroll_chat(group_id);
+		}
+		
+	},
+	
 	load_older_messages: function (from_bare, to_bare, jid_id) {
 		var dataString = 'from=' + from_bare + '&to=' + to_bare;
 		jQuery.ajax({
@@ -783,9 +814,6 @@ var Client = {
 				
 		// remove notifications since user is now active
 		jQuery('#chat_' + jid_id + ' .chat_messages').parent().find('.chat_event').text('');
-	                        
-	    // make db entry for message
-	    //Client.message_to_db(from_bare, Strophe.getBareJidFromJid(jQuery(message).attr('to')), body, timestamp);
 	    
 		Client.focus_chat(jid_id);
 		Client.scroll_chat(jid_id);
@@ -936,7 +964,7 @@ jQuery(document).bind('disconnected', function () {
 });
 
 jQuery(document).bind('room_joined', function (ev, jid) {
-	console.log('room_joined');
+	console.log('room_joined');	
 	
 	Client.mucs[jid]["joined"] = true;
 	
