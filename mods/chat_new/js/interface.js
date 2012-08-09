@@ -48,6 +48,57 @@ function read(chbox){
 	}
 }
 
+function load_inbox(id){
+	var dataString = 'my_id=' + id;	
+	jQuery.ajax({
+		type: "POST",
+		url: "ATutor/mods/chat_new/ajax/get_inbox.php",
+		data: dataString,
+		cache: false,
+		success: function (data) {			
+			var timestamps = jQuery(data).find('.inbox_list_time');
+			timestamps.each(function () {
+				var timestamp = Number(jQuery(this).text());
+				data = data.replace(timestamp, "<nobr>" + moment(timestamp).format('DD.MM.YY') + "</nobr><br/><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>");
+			});
+			
+			jQuery('#inbox_list').append(data);
+			
+			// binding function that will retrieve older messages on scrollTop
+			jQuery('#inbox_list').scroll(function(){
+				var div = jQuery('#inbox_list').get(0);
+				if (div.offsetHeight + div.scrollTop >= div.scrollHeight) {
+					// load older messages
+					var offset = jQuery('#inbox_list li').length;
+					var dataString = 'my_id=' + id + '&offset=' + offset;
+					jQuery.ajax({
+						type: "POST",
+						url: "ATutor/mods/chat_new/ajax/get_inbox.php",
+						data: dataString,
+						cache: false,
+						success: function (data) {
+							var timestamps = jQuery(data).find('.inbox_list_time');
+							timestamps.each(function () {
+								var timestamp = Number(jQuery(this).text());
+								data = data.replace(timestamp, "<nobr>" + moment(timestamp).format('DD.MM.YY') + "</nobr><br/><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>");
+							});
+							
+							jQuery('#inbox_list').append(data);
+							
+						},
+						error: function (xhr, errorType, exception) {
+						    console.log("error: " + exception);
+						}		
+					});
+				}
+			}); 
+			
+        },
+        error: function (xhr, errorType, exception) {
+            console.log("error: " + exception);
+        }		
+	});
+}
 
 function findParentNode(parentClass, childObj) {
     var testObj = childObj.parentNode;
@@ -60,6 +111,22 @@ function findParentNode(parentClass, childObj) {
     // console.log(testObj);
     return testObj;
 }
+
+jQuery('.inbox_list_item').live('click', function () {
+	var jid = jQuery(this).attr('id').slice(6, jQuery(this).attr('id').length);
+	var jid_id = Client.jid_to_id(jid);
+	var name = jQuery(this).find('.inbox_list_name').text();
+
+	open_conversation_tab(jid, jid_id, name, jQuery(this).hasClass('inbox_muc'));
+	
+	if (jQuery(this).hasClass('inbox_muc')) {
+		var my_groupname = jQuery('.me').find('.friends_item_name')[0].textContent;
+		Client.mucs[jid] = { "joined":false, "participants":new Array(), "invites_to":new Array(), "nickname":my_groupname};
+		Client.connection.send($pres({
+				to: jid + "/" + my_groupname
+			}).c('x', {xmlns: "http://jabber.org/protocol/muc"}));
+	}
+});
 
 
 // ================= conversation tabs
@@ -129,19 +196,19 @@ function refreshForm(){
 	if (friendsMembers){
 		document.getElementById("nr_of_members").innerHTML = friendsMembers.childNodes.length - 2;
 		
-		if (friendsMembers.childNodes.length - 2 == 1){
+		if (friendsMembers.childNodes.length - 2 == 0){
 			document.getElementById("groupname").disabled = true;
 			document.getElementById("friends_selected_bnt").disabled = true;
 			document.getElementById("friends_selected_label").style.color = '#555';
 		}
-		else if (friendsMembers.childNodes.length - 2 == 2){
+		else if (friendsMembers.childNodes.length - 2 == 1){
 			document.getElementById("groupname").disabled = true;
 			if (validateGroupname() == false){
 				document.getElementById("friends_selected_bnt").disabled = false;
 			document.getElementById("friends_selected_label").style.color = '#555';
 			}
 		}
-		else if (friendsMembers.childNodes.length - 2 >= 3){
+		else if (friendsMembers.childNodes.length - 2 >= 2){
 			document.getElementById("groupname").disabled = false;
 			if (validateGroupname() == false){
 				document.getElementById("friends_selected_bnt").disabled = true;
@@ -170,7 +237,7 @@ function validateGroupname(){
 }
 
 jQuery('#friends_selected_bnt').live('click', function () {
-	if (jQuery('#friends_members').find('div').length == 2) {
+	if (jQuery('#friends_members').find('div').length == 1) {
 		var jid = jQuery('#friends_members').find('.friends_column_wrapper_classmates').attr('id').slice(11, jQuery('#friends_members').find('.friends_column_wrapper_classmates').attr('id').length);
 		var jid_id = Client.jid_to_id(jid);
 		var name = jQuery('#friends_members').find('.friends_column_wrapper_classmates').find('.friends_item_name').text();
@@ -193,7 +260,7 @@ jQuery('#friends_selected_bnt').live('click', function () {
 		Client.focus_chat(jid_id);
 		Client.scroll_chat(jid_id);
 		
-	} else if (jQuery('#friends_members').find('div').length > 2) {
+	} else if (jQuery('#friends_members').find('div').length > 1) {
 		var jids = new Array();
 		jQuery('#friends_members').find('.friends_column_wrapper_classmates').each(function () {
 			var nick = jQuery(this).find('.friends_item_name')[0].textContent;
@@ -224,7 +291,6 @@ jQuery('#friends_selected_bnt').live('click', function () {
 		}
 		
 		if (Client.mucs[groupname + "@conference.talkr.im"] == undefined) {
-		//if (jQuery('#chat_' + jid_id).length === 0) {
 			var my_groupname = jQuery('.me').find('.friends_item_name')[0].textContent;
 			
 			Client.connection.send($pres({
@@ -277,24 +343,53 @@ jQuery('.friends_column_wrapper').live('click', function () {
 	var name = jQuery(this).find('.friends_item_name').text();
 	var jid_id = Client.jid_to_id(jid);
 
-	if (jQuery('#chat_' + jid_id).length === 0) {
-		jQuery('#subtabs').tabs( "add", '#chat_' + jid_id, name);
-		jQuery('#chat_' + jid_id).append(
-			"<div class='chat_messages'></div><hr/>" +
-			"<table class='conversations_table'><tr>" +
-				"<td class='conversations_table_spacer'></td>" +
-				"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + jid + "'></textarea></td>" +
-				"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/></td>" +
-			"</tr></table>");
-		jQuery('#chat_' + jid_id).data('jid', jid);
+	open_conversation_tab(jid, jid_id, name, false);
+});
+
+function open_conversation_tab(jid, jid_id, name, muc) {
+	if (muc == false) {
+		if (jQuery('#chat_' + jid_id).length === 0) {
+			jQuery('#subtabs').tabs( "add", '#chat_' + jid_id, name);
+			jQuery('#chat_' + jid_id).append(
+				"<div class='chat_messages'></div><hr/>" +
+				"<table class='conversations_table'><tr>" +
+					"<td class='conversations_table_spacer'></td>" +
+					"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + jid + "'></textarea></td>" +
+					"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/></td>" +
+				"</tr></table>");
+			jQuery('#chat_' + jid_id).data('jid', jid);
+			
+			// load older messages
+			Client.load_older_messages(jid, Strophe.getBareJidFromJid(Client.my_full_jid), jid_id);
+		}
 		
-		// load older messages
-		Client.load_older_messages(jid, Strophe.getBareJidFromJid(Client.my_full_jid), jid_id);
-		
+	} else {
+		if (jQuery('#chat_' + jid_id).length === 0) {
+			jQuery('#subtabs').tabs( "add", '#chat_' + jid_id, name);
+			jQuery('#chat_' + jid_id).append(
+				"<div class='chat_messages fl-container-flex80'></div><div class='muc_roster fl-container-flex20'><ul></ul></div><hr/>" +
+				"<table class='conversations_table'><tr>" +
+					"<td class='conversations_table_spacer'></td>" +
+					"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + jid + "'></textarea></td>" +
+					"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/>" + 
+															"<input class='conversations_leave_muc' type='button' label='submit' value='Leave'/></td>" +
+				"</tr></table>");
+				
+			jQuery('#chat_' + jid_id).data('jid', jid);
+			
+			// load older messages
+			Client.load_older_messages(null, jid, jid_id);
+			
+		} else {	
+			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_textarea').removeAttr('disabled');
+			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_send').removeAttr('disabled');
+			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_leave_muc').removeAttr('disabled');
+		}
 	}
+	
 	Client.focus_chat(jid_id);
 	Client.scroll_chat(jid_id);
-});
+}
 
 jQuery('.conversations_textarea').live('keypress', function (ev) {
 	var jid = jQuery(this).parent().parent().parent().parent().parent().data('jid');
@@ -440,6 +535,8 @@ jQuery('.conversations_leave_muc').live('click', function () {
 	
 	var timestamp = +new Date;
 	jQuery('#chat_' + jid_id + ' .chat_messages').append("<hr/><div class='notice'>" + moment(timestamp).format('HH:mm:ss ') + "You left the room</div>");
+	Client.focus_chat(jid_id);
+	Client.scroll_chat(jid_id);
 	jQuery("#chat_" + jid_id).find(".muc_roster li").remove();
 	
 	Client.connection.send($pres({"to": jid + "/" + my_groupname, "nickname": my_groupname, "type": "unavailable"}));

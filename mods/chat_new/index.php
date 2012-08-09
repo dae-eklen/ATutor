@@ -21,8 +21,31 @@ $_custom_head .= '<script type="text/javascript" src="https://ajax.googleapis.co
 $_custom_css = $_base_path.'mods/chat_new/module.css'; // use a custom stylesheet
 require (AT_INCLUDE_PATH.'header.inc.php');
 
+//	$to = 'qwertytest13@conference.talkr.im';
+//	$my_jid = 'dae-eklen-test@talkr.im';
+//	$roster = '';
+//	
+//	$sql = "SELECT member_id, first_name, last_name, jid FROM ".TABLE_PREFIX."chat_members CM INNER JOIN ".TABLE_PREFIX."members M USING (member_id) 
+//		WHERE CM.jid IN
+//			(SELECT U.user_jid FROM ".TABLE_PREFIX."chat_user_mucs U
+//					WHERE U.muc_jid='".$to."')
+//		ORDER BY M.first_name ASC 
+//		";
+//	$result = mysql_query($sql, $db);
+//	while($row = mysql_fetch_assoc($result)){
+//		$profile_link = "<a href='profile.php?id=" .$row[member_id]. "'>" .$row[first_name] . ' ' . $row[last_name] ."</a>";
+//		if ($row[jid] != $my_jid) {        	        
+//	    	$roster .= "<li id='muclist_" .$row[jid]. "'>" .$profile_link. "</li>";
+//	    } else {
+//	       	$roster .= "<li class='muc_roster_me' style='background-color:white; border:2px solid #BBB;'>" .$profile_link. "</li>";
+//	    }
+//	}
+//	
+//	echo $roster;
+	
 
 ?>
+
 	<div id="welcome" class="fl-container-flex90">
 		Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 		<table id="welcome_form">
@@ -55,9 +78,9 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 		<div id="<?php echo $_SESSION[member_id]; ?>"></div>
 		<div class="fl-container-flex90 fl-left democ-linearize-sections ui-tabs ui-widget ui-widget-content ui-corner-all" id="tabs">
 		    <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" role="tablist">
-		        <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tab_inbox">Inbox list</a></li>
+		        <li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active" role="presentation"><a href="#tab_inbox">Inbox list</a></li>
 		        <li class="ui-state-default ui-corner-top"><a href="#tab_conversations">Conversations</a></li>
-		        <li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active" role="presentation"><a href="#tab_friends">Friends</a></li>
+		        <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tab_friends">Group chat</a></li>
 		        <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tab_settings">Settings</a></li>
 		    </ul>		  
 		    <div id="tab_inbox">
@@ -98,7 +121,9 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 	    jQuery("#tabs, #subtabs").tabs();
 	    
 	    refreshForm();
-	    hide_div(<?php echo $_SESSION['member_id']; ?>);
+	    hide_div(<?php echo $_SESSION[member_id]; ?>);
+	    
+	    load_inbox(<?php echo $_SESSION[member_id]; ?>);
 	    
 	</script>
 

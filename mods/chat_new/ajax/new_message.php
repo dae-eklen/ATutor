@@ -15,7 +15,11 @@ if (isset($_POST['from']) && isset($_POST['to']) && isset($_POST['msg']) && isse
 		
 	} else if ($_POST['groupchat'] == 1) {
 		// muc message	
-		echo 1;
+		$sql = "INSERT INTO `".TABLE_PREFIX."chat_muc_messages` (`from`, `to`, `msg`, `timestamp`) VALUES ('$from', '$to', '$msg', '$timestamp')";
+		$resp = mysql_query($sql,$db);
+		if ($resp){
+			echo 1;
+		}
 	}
 }
 
