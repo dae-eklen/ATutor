@@ -1,8 +1,8 @@
 	    
 // ================= hides welcome or chat div
-function hide_div(id){
+function hide_div(){
 	// called each time on index page load, gets jid and pass to authenticate	
-	var dataString = 'id=' + id;
+	var dataString = 'id=' + jQuery("div").filter(jQuery('#chat').find('div')[1]).attr('id');
 	jQuery.ajax({
 		type: "POST",
 		url: "ATutor/mods/chat_new/ajax/check_auth.php",
@@ -48,7 +48,8 @@ function read(chbox){
 	}
 }
 
-function load_inbox(id){
+function load_inbox(){
+	var id = jQuery("div").filter(jQuery('#chat').find('div')[1]).attr('id');
 	var dataString = 'my_id=' + id;	
 	jQuery.ajax({
 		type: "POST",
@@ -119,13 +120,7 @@ jQuery('.inbox_list_item').live('click', function () {
 
 	open_conversation_tab(jid, jid_id, name, jQuery(this).hasClass('inbox_muc'));
 	
-	if (jQuery(this).hasClass('inbox_muc')) {
-		var my_groupname = jQuery('.me').find('.friends_item_name')[0].textContent;
-		Client.mucs[jid] = { "joined":false, "participants":new Array(), "invites_to":new Array(), "nickname":my_groupname};
-		Client.connection.send($pres({
-				to: jid + "/" + my_groupname
-			}).c('x', {xmlns: "http://jabber.org/protocol/muc"}));
-	}
+	// Client.display_muc_roster(jid);
 });
 
 
@@ -277,7 +272,7 @@ jQuery('#friends_selected_bnt').live('click', function () {
 					continue;
 				} 				
 			}
-			jids.push({"jid": jQuery(this).attr('id').slice(11, jQuery(this).attr('id').length), "nick": nick});
+			jids.push({"jid": jQuery(this).attr('id').slice(11, jQuery(this).attr('id').length), "nick": nick, "status": "offline"});
 		});
 		
 		var groupname = jQuery('#friends').find('#groupname').val();
@@ -298,6 +293,9 @@ jQuery('#friends_selected_bnt').live('click', function () {
 			}).c('x', {xmlns: "http://jabber.org/protocol/muc"}));
 
 			Client.mucs[groupname + "@conference.talkr.im"] = { "joined":false, "participants":new Array(), "invites_to":jids, "nickname":my_groupname};
+			console.log("#friends_selected_bnt create: ", Client.mucs[groupname + "@conference.talkr.im"]["joined"], 
+				Client.mucs[groupname + "@conference.talkr.im"]["participants"], Client.mucs[groupname + "@conference.talkr.im"]["invites_to"], 
+				Client.mucs[groupname + "@conference.talkr.im"]["nickname"]);
 
 		} else if (jQuery('#chat_' + jid_id).length !== 0) {
 			Client.focus_chat(jid_id);
@@ -529,7 +527,9 @@ jQuery('.conversations_leave_muc').live('click', function () {
 	var my_groupname = Client.mucs[jid]["nickname"];
 	var jid_id = Client.jid_to_id(jid);
 	
+	console.log(".conversations before leave delete: ", Client.mucs[jid]);
 	delete Client.mucs[jid];
+	console.log(".conversations leave delete: ", Client.mucs[jid]);
 	
 	jQuery('#chat_' + jid_id).find('li').remove(":contains('" + my_groupname + "')");
 	

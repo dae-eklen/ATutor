@@ -24,7 +24,7 @@ if (isset($_POST['to']) && isset($_POST['my_jid'])){
 	    }
 	}
 	
-	echo $roster;
+	echo "<div>".$roster."</div>";
 	
 }
 
