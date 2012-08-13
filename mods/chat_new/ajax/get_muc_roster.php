@@ -18,7 +18,7 @@ if (isset($_POST['to']) && isset($_POST['my_jid'])){
 		$profile_link = "<a href='profile.php?id=" .$row[member_id]. "'>" .$row[first_name] . ' ' . $row[last_name] ."</a>";
 		
 		if ($row[jid] != $my_jid) {        	        
-	    	$roster .= "<li id='muclist_" .$row[jid]. "'>" .$profile_link. "</li>";
+	    	$roster .= "<li class='muclist_" .$row[jid]. "'>" .$profile_link. "</li>";
 	    } else {
 	       	$roster .= "<li class='muc_roster_me' style='background-color:white; border:2px solid #BBB;'>" .$profile_link. "</li>";
 	    }

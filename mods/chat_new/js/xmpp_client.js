@@ -182,11 +182,11 @@ var Client = {
 			if (Client.mucs[from_bare]["joined"] == true) {
 				if (jQuery(presence).attr('type') === 'unavailable' && Client.mucs[from_bare]["nickname"] != nick) {
 					// user left
-					Client.muc_user_status_change(Strophe.getBareJidFromJid(jQuery(presence).find('item').attr('jid')), nick, from_bare, false);
+					// Client.muc_user_status_change(Strophe.getBareJidFromJid(jQuery(presence).find('item').attr('jid')), nick, from_bare, false);
 					
 				} else if (Client.mucs[from_bare]["nickname"] != nick){
-					// user hoined
-					Client.muc_user_status_change(Strophe.getBareJidFromJid(jQuery(presence).find('item').attr('jid')), nick, from_bare, true);
+					// user joined
+					// Client.muc_user_status_change(Strophe.getBareJidFromJid(jQuery(presence).find('item').attr('jid')), nick, from_bare, true);
 				}
 			}
 			
@@ -212,7 +212,7 @@ var Client = {
 					if (Client.mucs[from_bare]["invites_to"].length > 0) {
 						var members = '';
 						for (var i = 0; i < Client.mucs[from_bare]["invites_to"].length; i++) {
-							Client.muc_user_status_change(Client.mucs[from_bare]["invites_to"][i]["jid"], Client.mucs[from_bare]["invites_to"][i]["nick"],from_bare, false);
+							// Client.muc_user_status_change(Client.mucs[from_bare]["invites_to"][i]["jid"], Client.mucs[from_bare]["invites_to"][i]["nick"],from_bare, false);
 							members += Client.mucs[from_bare]["invites_to"][i]["jid"] + '  ';
 						}
 						members += Strophe.getBareJidFromJid(Client.my_full_jid);
@@ -239,12 +239,12 @@ var Client = {
 				alert("An error while entering multi-user chat room occured: " + jQuery(presence).find('text').text());
 				
 			} else if (jQuery(presence).attr('type') !== 'unavailable' && Client.mucs[from_bare]["nickname"] != nick) {
-				// user hoined
-				Client.muc_user_status_change(Strophe.getBareJidFromJid(jQuery(presence).find('item').attr('jid')), nick, from_bare, true);
+				// user joined
+				// Client.muc_user_status_change(Strophe.getBareJidFromJid(jQuery(presence).find('item').attr('jid')), nick, from_bare, true);
 				
 			} else if (jQuery(presence).attr('type') === 'unavailable' && Client.mucs[from_bare]["nickname"] != nick) {
 				// user left
-				Client.muc_user_status_change(Strophe.getBareJidFromJid(jQuery(presence).find('item').attr('jid')), nick, false);
+				// Client.muc_user_status_change(Strophe.getBareJidFromJid(jQuery(presence).find('item').attr('jid')), nick, false);
 	
 			}
 
@@ -288,7 +288,24 @@ var Client = {
 					// reset addressing for user since their presence changed
 					var jid_id = Client.jid_to_id(from);
 					jQuery('#chat_' + jid_id).data('jid', Strophe.getBareJidFromJid(from));
-				} 
+				}
+				
+				// change status in muc rosters
+				jQuery("#subtabs").find(".conversations_table textarea").each(function () {
+					var nick = '';
+					var jid = jQuery(this).attr("id").slice(5, jQuery(this).attr("id").length);
+					if (jQuery('#chat_' + Client.jid_to_id(jid)).length !== 0) {
+						// console.log("opened chats: ",jQuery('#chat_' + Client.jid_to_id(jid)).length, jQuery("#chat_" + Client.jid_to_id(jid)).find(".muc_roster li"));
+						jQuery("#chat_" + Client.jid_to_id(jid)).find(".muc_roster li").each(function () {
+							// console.log('this: ', jQuery(this), jQuery(this).attr('class'), 'muclist_' + Strophe.getBareJidFromJid(from), jQuery(this).attr('class').search('muclist_' + Strophe.getBareJidFromJid(from)));
+							if (jQuery(this).attr('class').search('muclist_' + Strophe.getBareJidFromJid(from)) != -1) {
+								var nick = jQuery(this).find('a').text();
+								// console.log("nick: ", nick);
+								Client.muc_user_status_change(Strophe.getBareJidFromJid(from), nick, jid, online);
+							}
+						});
+					}
+				});
 			}
 		}
 		
@@ -415,7 +432,7 @@ var Client = {
 			}
 			nicks.push(nick);
 			
-			Client.muc_user_status_change(jQuery(this).attr('jid'), nick, Strophe.getBareJidFromJid(jQuery(iq).attr('from')), false);
+			// Client.muc_user_status_change(jQuery(this).attr('jid'), nick, Strophe.getBareJidFromJid(jQuery(iq).attr('from')), false);
 		});
 		
 	},
@@ -608,8 +625,7 @@ var Client = {
 	
 		
 	// helpers	
-	muc_user_status_change: function (user_jid, nick, group, joined) {
-		console.log("muc_user_status_change: ", user_jid, nick, group, joined);		
+	muc_user_status_change: function (user_jid, nick, group, joined) {	
 		if (user_jid != Strophe.getBareJidFromJid(Client.my_full_jid)) {
 			var group_id = Client.jid_to_id(group);
 			if (joined == true) {
@@ -633,22 +649,25 @@ var Client = {
 				Client.mucs[group]["participants"][pos]["status"] = status;
 				Client.mucs[group]["participants"][pos]["nick"] = nick;
 			}
-			console.log("PARTICIPANTS: ",Client.mucs[group]["participants"]);
 			
 			// if tab opened, show logs
 			if (jQuery('#chat_' + group_id).length !== 0 && joined == true) {
-				//Client.add_to_muc_roster(group, user_jid, nick,css);
-				document.getElementById('muclist_' + user_jid).className = "joined";
-				console.log("document.getElementById('muclist_' + user_jid).className: ", document.getElementById('muclist_' + user_jid).className);
+				jQuery('#chat_' + group_id + ' .muc_roster li').each(function () {
+					if (jQuery(this).attr('class').search('muclist_' + user_jid) != -1) {
+						jQuery(this).addClass("joined");
+					}
+				});
 				var timestamp = +new Date;
 				jQuery('#chat_' + group_id).find('.chat_messages').append("<hr/><div class='notice'>" + moment(timestamp).format('HH:mm:ss ') + nick + " entered the room</div>");
 				Client.focus_chat(group_id);
 				Client.scroll_chat(group_id);
 				
 			} else if (jQuery('#chat_' + group_id).length !== 0 && joined == false) {
-				//Client.add_to_muc_roster(group, user_jid, nick, css);
-				jQuery("li").filter(document.getElementById('muclist_' + user_jid)).removeAttr("class");
-				console.log("document.getElementById('muclist_' + user_jid).className: ", document.getElementById('muclist_' + user_jid).className);
+				jQuery('#chat_' + group_id + ' .muc_roster li').each(function () {
+					if (jQuery(this).attr('class').search('muclist_' + user_jid) != -1) {
+						jQuery(this).removeClass("joined");
+					}
+				});
 				var name = jQuery("li").filter(document.getElementById('muclist_' + user_jid)).text();			
 				var timestamp = +new Date;
 				jQuery('#chat_' + group_id).find('.chat_messages').append("<hr/><div class='notice'>" + moment(timestamp).format('HH:mm:ss ') + name + " left the room</div>");
@@ -670,12 +689,16 @@ var Client = {
 					// add muc roster
 					jQuery('#chat_' + jid_id + ' .muc_roster ul').append(jQuery(data));
 					
-					// add to array
 					var jids = new Array();
-					jQuery(data).find('li').each(function () {
-						if (jQuery(this).attr('id') != undefined) {
-							var jid = jQuery(this).attr('id').slice(8, jQuery(this).attr('id').length);
-						
+					jQuery('#chat_' + jid_id + ' .muc_roster ul').find('li').each(function () {
+						if (jQuery(this).attr('class') != 'muc_roster_me') {
+							var jid = jQuery(this).attr('class').slice(8, jQuery(this).attr('class').length);
+							if (jQuery("div").filter(document.getElementById(jid)).hasClass("online") == true) {
+								jQuery(this).addClass("joined");
+							} else {
+								var css = '';
+							}
+							
 							var pos = -1;
 							for (var i = 0; i < Client.mucs[to_bare]["participants"].length; i++) {
 								if (Client.mucs[to_bare]["participants"][i]["jid"] == jid) {
@@ -683,14 +706,19 @@ var Client = {
 								}
 							}
 							
+							if (jQuery("div").filter(document.getElementById(jid)).hasClass("online") == true) {
+								var status = "online";
+							} else {
+								var status = "offline";
+							}							
 							if (pos == -1) { 
-								jids.push({"jid": jid, "nick": "", "status": "offline"});
-								console.log("PUSHED: ", {"jid": jid, "nick": "", "status": "offline"});
+								jids.push({"jid": jid, "nick": "", "status": status});
 							}
 						}
 					});
 					
 					Client.mucs[to_bare]["participants"] = jids;
+					
 		        },
 		        error: function (xhr, errorType, exception) {
 		            console.log("error: " + exception);
