@@ -118,8 +118,6 @@ jQuery('.inbox_list_item').live('click', function () {
 	var name = jQuery(this).find('.inbox_list_name').text();
 
 	open_conversation_tab(jid, name, jQuery(this).hasClass('inbox_muc'));
-	
-	// Client.display_muc_roster(jid);
 });
 
 
@@ -406,7 +404,6 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 		}
 		
 		var timestamp = +new Date;
-		
 		if (jid.search("@conference.talkr.im") == -1) {
 			// chat
 			var message = $msg({to: jid, "type": "chat"}).c('body').t(body).up()
@@ -448,8 +445,6 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 	 	Client.message_to_db(Strophe.getBareJidFromJid(Client.my_full_jid), Strophe.getBareJidFromJid(jid), body, timestamp, groupchat);
 	 	
 	 	Client.connection.send(message);
-	 	
-	 	Client.update_inbox(Strophe.getBareJidFromJid(jid), body, timestamp);
 	 	
 	} else {
 		var composing = jQuery(this).parent().parent().parent().parent().parent().data('composing');

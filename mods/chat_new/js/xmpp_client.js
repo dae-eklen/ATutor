@@ -208,12 +208,38 @@ var Client = {
 				
 				if (Client.mucs[from_bare]["joined"] == false) {
 					// room join complete
-					jQuery(document).trigger('room_joined', from_bare);
-						
+					jQuery(document).trigger('room_joined', from_bare);					
+		
+					
 					if (Client.mucs[from_bare]["invites_to"].length > 0) {
+						// add self
+						var jid_id = Client.jid_to_id(from_bare);
+						var my_id = jQuery("div").filter(jQuery('#chat').find('div')[1]).attr('id');
+						jQuery('#chat_' + jid_id + ' .muc_roster ul').append("<li class='muc_roster_me' style='background-color:white; border:2px solid #BBB;'><a href='profile.php?id=" + my_id + "'>" + 
+								Client.mucs[from_bare]["nickname"] + "</a></li>");
+						
+						// add others
 						var members = '';
 						for (var i = 0; i < Client.mucs[from_bare]["invites_to"].length; i++) {
-							// Client.muc_user_status_change(Client.mucs[from_bare]["invites_to"][i]["jid"], Client.mucs[from_bare]["invites_to"][i]["nick"],from_bare, false);
+							// add to muc roster
+							var id = jQuery("div").filter(document.getElementById(Client.mucs[from_bare]["invites_to"][i]["jid"])).find("table").attr("id");
+							var list_item = "<li class='muclist_" + Client.mucs[from_bare]["invites_to"][i]["jid"] + "'><a href='profile.php?id=" + id + "'>" + 
+								Client.mucs[from_bare]["invites_to"][i]["nick"] + "</a></li>";
+							
+							var inserted = false;
+							jQuery('#chat_' + jid_id + ' .muc_roster li').each(function () {
+								var cmp_name = jQuery(this).find('a')[0].textContent;
+								if (Client.mucs[from_bare]["invites_to"][i]["nick"] < cmp_name) {
+									jQuery(this).before(list_item);
+									inserted = true;
+									return false;
+								}
+							});
+							if (!inserted) {
+								// insert after last element of group
+								jQuery('#chat_' + jid_id + ' .muc_roster li').last().after(list_item);
+							}							
+							
 							members += Client.mucs[from_bare]["invites_to"][i]["jid"] + '  ';
 						}
 						members += Strophe.getBareJidFromJid(Client.my_full_jid);
@@ -232,6 +258,9 @@ var Client = {
 							    console.log("error: " + exception);
 							}		
 						});
+						
+						//load_older_messages
+						// Client.load_older_messages(null, from_bare, Client.jid_to_id(from_bare));
 					}					
 				}
 			}
@@ -386,9 +415,9 @@ var Client = {
 		for (var i = 0; i < Client.mucs[from]["invites_to"].length; i++) {
 			var jid = Client.mucs[from]["invites_to"][i]["jid"];
 			var nick = Client.mucs[from]["invites_to"][i]["nick"];
-			console.log("on_room_member_list send invites_to: ", Client.mucs[from]["joined"], 
-						Client.mucs[from]["participants"], Client.mucs[from]["invites_to"], 
-						Client.mucs[from]["nickname"]);
+			// console.log("on_room_member_list send invites_to: ", Client.mucs[from]["joined"], 
+						// Client.mucs[from]["participants"], Client.mucs[from]["invites_to"], 
+						// Client.mucs[from]["nickname"]);
 			// add members
 			var request_id = Client.connection.sendIQ(
 	        	$iq({type: "set", to: from})
@@ -403,6 +432,24 @@ var Client = {
             			.c("invite",{to:jid}) 
                     		.c("reason").t("Your nick: " + nick) 
             );
+            
+            // add to muc roster
+            var id = jQuery("div").filter(document.getElementById(jid)).find("table").attr("id");
+            var list_item = "<li class='muc_roster_me' style='background-color:white; border:2px solid #BBB;'><a href='profile.php?id=" + id + "'>" + nick + "</a></li>";
+            var jid_id = Client.jid_to_id(jid);
+			var inserted = false;
+			jQuery('#chat_' + jid_id + ' .muc_roster li').each(function () {
+				var cmp_name = jQuery(this).find('a')[0].textContent;
+				if (nick < cmp_name) {
+					jQuery(this).before(list_item);
+					inserted = true;
+					return false;
+				}
+			});
+			if (!inserted) {
+				// insert after last element of group
+				jQuery('#chat_' + jid_id + ' .muc_roster li').last().after(list_item);
+			}
 		}
         
 		return false;
@@ -458,7 +505,7 @@ var Client = {
 			
 			// add tab
 			// Client.add_new_muc_tab(from_room);
-			open_conversation_tab(room, Strophe.getNodeFromJid(room), false);
+			open_conversation_tab(from_room, Strophe.getNodeFromJid(from_room), true);
 			
 			console.log("on_muc_invite create: ", Client.mucs[from_room]["joined"], 
 						Client.mucs[from_room]["participants"], Client.mucs[from_room]["invites_to"], 
@@ -610,8 +657,7 @@ var Client = {
 
                 Client.focus_chat(jid_id);
 				Client.scroll_chat(jid_id);
-				
-				Client.update_inbox(room, body, timestamp);
+				Client.update_inbox(room, body, +new Date);
 				
 			} else if (Client.mucs[room]["joined"] == true) {
 				if (jQuery('#chat_' + jid_id).length !== 0) {
@@ -645,12 +691,12 @@ var Client = {
 			
 			// change order
 			jQuery("#inbox_list")[0].removeChild(inbox_item);
+			jQuery("#inbox_list li").first().before(inbox_item);
 			
 		} else {
 			// add new item
 			if (from_bare.indexOf('@conference.talkr.im') == -1) {
 				// private
-				console.log('PRIVATE');
 				var img_src = jQuery("div").filter(document.getElementById(from_bare)).find("img").attr("src");
 				var name = jQuery("div").filter(document.getElementById(from_bare)).find(".friends_item_name")[0].textContent;
 				var id = jQuery("div").filter(document.getElementById(from_bare)).find("table").attr("id");
@@ -670,6 +716,8 @@ var Client = {
 		                       	"</div></td>-->" +
 		                "</tr></table>" +
 		            "</li>";
+		            
+		        jQuery("#inbox_list li").first().before(inbox_item);
 				
 			} else {
 				//muc
@@ -683,7 +731,6 @@ var Client = {
 						var data = returned.split('  ');
 						var nr = data[0];
 						var base_path = data[1];
-						
 						var inbox_item = "<li class='inbox_list_item inbox_muc' id='inbox_" + from_bare + "'>" +
 			         		"<table><tr>" +
 			         				"<td><img class='picture' src='" + base_path + "/images/home-acollab.png' alt='group_chat_image'/></td>" +
@@ -700,6 +747,8 @@ var Client = {
 			                       	"</div></td>-->" +
 			                "</tr></table>" +
 			            "</li>";
+			            
+			            jQuery("#inbox_list li").first().before(inbox_item);
 						
 			        },
 			        error: function (xhr, errorType, exception) {
@@ -708,8 +757,6 @@ var Client = {
 				});
 			}
 		}
-		
-		jQuery("#inbox_list li").first().before(inbox_item);
 	},
 		
 	muc_user_status_change: function (user_jid, nick, group, joined) {	
@@ -773,7 +820,7 @@ var Client = {
 				cache: false,
 				success: function (data) {
 					// add muc roster
-					jQuery('#chat_' + jid_id + ' .muc_roster ul').append(jQuery(data));
+					jQuery('#chat_' + jid_id + ' .muc_roster ul').append(jQuery(data).find('li'));
 					
 					var jids = new Array();
 					jQuery('#chat_' + jid_id + ' .muc_roster ul').find('li').each(function () {
@@ -1062,7 +1109,9 @@ var Client = {
 	
 	scroll_chat: function (jid_id) {
 		var div = jQuery('#chat_' + jid_id + ' .chat_messages').get(0);
-		div.scrollTop = div.scrollHeight;
+		if (div != undefined) {
+			div.scrollTop = div.scrollHeight;
+		}
 	},
 	
 	focus_chat: function (jid_id) {
@@ -1231,6 +1280,8 @@ jQuery(document).bind('disconnected', function () {
 
 jQuery(document).bind('room_joined', function (ev, jid) {	
 	Client.mucs[jid]["joined"] = true;
+	
+	console.log("JOINED: ", jid);
 	
 	if (Client.mucs[jid]["invites_to"].length > 0) { 
 		//Client.add_new_muc_tab(jid);

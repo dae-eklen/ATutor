@@ -21,26 +21,6 @@ $_custom_head .= '<script type="text/javascript" src="https://ajax.googleapis.co
 $_custom_css = $_base_path.'mods/chat_new/module.css'; // use a custom stylesheet
 require (AT_INCLUDE_PATH.'header.inc.php');
 
-//	$roomname = 'qwertytest13@conference.talkr.im';
-//	$members = explode("  ", "dae-eklen-test@talkr.im");
-//	debug($members);
-//	for ($i = 0; $i < count($members); $i++) {
-//		echo $members[$i];
-//		$sql = "SELECT * FROM ".TABLE_PREFIX."chat_user_mucs WHERE muc_jid='".$roomname."' AND user_jid='".$members[$i]."'";
-//		$result = mysql_query($sql, $db);
-////		$row = mysql_fetch_assoc($result);
-////		echo $row;
-//		if ($result == false) {
-//			echo -1;
-//			// does not exist
-//			//$sql = "INSERT INTO `".TABLE_PREFIX."chat_user_mucs` (`muc_jid`, `user_jid`) VALUES ('$roomname', '$members[$i]')";
-//			//$resp = mysql_query($sql,$db);
-//			
-//		} else {
-//			// exists
-//			echo 1;
-//		}
-//	}
 
 ?>
 
