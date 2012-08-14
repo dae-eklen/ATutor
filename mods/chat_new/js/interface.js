@@ -115,10 +115,9 @@ function findParentNode(parentClass, childObj) {
 
 jQuery('.inbox_list_item').live('click', function () {
 	var jid = jQuery(this).attr('id').slice(6, jQuery(this).attr('id').length);
-	var jid_id = Client.jid_to_id(jid);
 	var name = jQuery(this).find('.inbox_list_name').text();
 
-	open_conversation_tab(jid, jid_id, name, jQuery(this).hasClass('inbox_muc'));
+	open_conversation_tab(jid, name, jQuery(this).hasClass('inbox_muc'));
 	
 	// Client.display_muc_roster(jid);
 });
@@ -339,12 +338,13 @@ jQuery('.friends_column_wrapper').live('click', function () {
 	
 	var jid = jQuery(this).attr('id');
 	var name = jQuery(this).find('.friends_item_name').text();
-	var jid_id = Client.jid_to_id(jid);
 
-	open_conversation_tab(jid, jid_id, name, false);
+	open_conversation_tab(jid, name, false);
 });
 
-function open_conversation_tab(jid, jid_id, name, muc) {
+function open_conversation_tab(jid, name, muc) {
+	var jid_id = Client.jid_to_id(jid);
+	
 	if (muc == false) {
 		if (jQuery('#chat_' + jid_id).length === 0) {
 			jQuery('#subtabs').tabs( "add", '#chat_' + jid_id, name);
@@ -391,6 +391,9 @@ function open_conversation_tab(jid, jid_id, name, muc) {
 
 jQuery('.conversations_textarea').live('keypress', function (ev) {
 	var jid = jQuery(this).parent().parent().parent().parent().parent().data('jid');
+	if (jid == undefined) {
+		var jid = jQuery(".conversations_textarea").attr("id").slice(5, jQuery(".conversations_textarea").attr("id").length);
+	}
 
 	if (ev.which === 13) {
 		ev.preventDefault();
@@ -445,6 +448,8 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 	 	Client.message_to_db(Strophe.getBareJidFromJid(Client.my_full_jid), Strophe.getBareJidFromJid(jid), body, timestamp, groupchat);
 	 	
 	 	Client.connection.send(message);
+	 	
+	 	Client.update_inbox(Strophe.getBareJidFromJid(jid), body, timestamp);
 	 	
 	} else {
 		var composing = jQuery(this).parent().parent().parent().parent().parent().data('composing');
@@ -515,6 +520,8 @@ jQuery('.conversations_send').live('click', function () {
  	Client.message_to_db(Strophe.getBareJidFromJid(Client.my_full_jid), Strophe.getBareJidFromJid(jid), body, timestamp, groupchat);
  	
  	Client.connection.send(message);
+ 	
+ 	Client.update_inbox(Strophe.getBareJidFromJid(jid), body, timestamp);
  	
 });
 // ================= leave_muc button

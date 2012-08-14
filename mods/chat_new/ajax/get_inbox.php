@@ -145,6 +145,24 @@ if (isset($_POST['my_id'])) {
 	}
 	
 	echo $html;
+
+
+
+
+
+
+} else if (isset($_POST['group_jid'])) {
+	$jid = $_POST['group_jid'];
+	$sql = "SELECT COUNT(*) as nr FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."members M USING (member_id)
+				WHERE C.jid IN
+					(SELECT UM.user_jid FROM ".TABLE_PREFIX."chat_user_mucs UM WHERE UM.muc_jid='".$jid."')";
+	$result = mysql_query($sql, $db);
+	if ($result) {
+		$row = mysql_fetch_assoc($result);
+		
+		echo $row[nr]."  ".$_base_path;
+	}
+	
 }
 
 ?>
