@@ -28,7 +28,7 @@
 .inbox_list_item table, .inbox_list_item_checked table {margin:0px;}
 .inbox_list_item table td:first-child, .inbox_list_item_checked table td:first-child {width:60px; padding-left:20px;}
 .inbox_list_item:hover, .inbox_list_item_checked:hover { background-color:#F2F2F2;}
-.inbox_list_item_checked { background-color:#F2F7F7;}
+.inbox_list_item_new { background-color:#F2F7F7;}
 .inbox_list_info {color:#000;}
 /*.inbox_list_info a:link, .inbox_list_info a:link, a:visited {color:#000;}*/
 div.course div.shortcuts, a {text-align: left;}

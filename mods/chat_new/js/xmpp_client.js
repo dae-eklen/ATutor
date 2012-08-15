@@ -569,26 +569,35 @@ var Client = {
 		}
 
 		if (body) {
-			var id = jQuery("div").filter(document.getElementById(from_bare)).find('.friends_item').attr('id');
-			if (jQuery('#chat_' + jid_id).length === 0) {
-				jQuery('#subtabs').tabs('add', '#chat_' + jid_id, sender_name);
-				jQuery('#chat_' + jid_id).append(
-					"<div class='chat_messages'></div><hr/>" +
-					"<table class='conversations_table'><tr>" +
-						"<td class='conversations_table_spacer'></td>" +
-						"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + from_bare + "'></textarea></td>" +
-						"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/></td>" +
-					"</tr></table>");
-
-				// load older messages
-				Client.load_older_messages(from_bare, to_bare, jid_id);
-				Client.update_inbox(from_bare, body, timestamp);
-				
-			} else {
+			if (jQuery('#chat_' + jid_id).length !== 0) {					
 				// add the new message
 				Client.append_new_msg(sender_img_src, sender_id, sender_name, body, timestamp, jid_id, from);
-				Client.update_inbox(from_bare, body, timestamp);
+				
+				if (jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-state-active") && 
+					jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-tabs-selected") &&
+					jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-tabs-selected") &&
+					jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-state-active")) {
+				
+					Client.focus_chat(jid_id);
+					Client.scroll_chat(jid_id);
+				}
+				
 			}
+			
+			// if ((!jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-tabs-selected") &&
+				// !jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-state-active")) || 
+// 				
+				// (document.getElementById("inbox_" + from_bare) == null) ||
+// 				
+				// (!jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-state-active") && 
+				// !jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-tabs-selected") &&
+				// jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-tabs-selected") &&
+				// jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-state-active"))) {
+// 						
+				// // Client.update_inbox(from_bare, body, timestamp);
+			// }
+			
+			Client.update_inbox(from_bare, body, timestamp);
 		}
 		return true;
 	},
@@ -609,55 +618,72 @@ var Client = {
 					// delayed message (we show only from DB)
 					return true;
 				}
-
-				var timestamp = jQuery(message).children("delay").attr('stamp');
-				if (timestamp == undefined) {
-					var time = "<nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>";
-				} else  {
-					var time = "<nobr>" + moment(timestamp).format('DD.MM.YY') + "</nobr><br/><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>";
-				}
 				
-				var member_id = jQuery("#roster").find(":contains('" + nick + "')").filter("td").parent().parent().parent().attr("id");
-				if (member_id == undefined) {
-					var profile_link = nick;
-				} else {
-					var profile_link = "<a href='profile.php?id=" + member_id + "'>" + nick + "</a>";
-				}
-
-				var sender_img_src = jQuery("#roster").find(":contains('" + nick + "')").filter("td").parent().find('.friends_item_picture').attr("src");
-				if (sender_img_src == undefined) {
-					var sender_img = "<div class='pic_square'></div>";
-				} else {
-					var sender_img = "<img class='picture' src='" + sender_img_src + "' alt='userphoto'/>";
-				}
-				
-				
-				if (jQuery('#chat_' + jid_id).length === 0) {
-					//Client.add_new_muc_tab(room);
-					open_conversation_tab(room, Strophe.getNodeFromJid(room), true);
+                if (jQuery('#chat_' + jid_id).length !== 0) {						
+					// add the new message
+					var sender_img_src = jQuery("#roster").find(":contains('" + nick + "')").filter("td").parent().find('.friends_item_picture').attr("src");
+					if (sender_img_src == undefined) {
+						var sender_img = "<div class='pic_square'></div>";
+					} else {
+						var sender_img = "<img class='picture' src='" + sender_img_src + "' alt='userphoto'/>";
+					}
+						
+					var timestamp = jQuery(message).children("delay").attr('stamp');
+					if (timestamp == undefined) {
+						var time = "<nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>";
+					} else  {
+						var time = "<nobr>" + moment(timestamp).format('DD.MM.YY') + "</nobr><br/><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>";
+					}
+						
+					var member_id = jQuery("#roster").find(":contains('" + nick + "')").filter("td").parent().parent().parent().attr("id");
+					if (member_id == undefined) {
+						var profile_link = nick;
+					} else {
+						var profile_link = "<a href='profile.php?id=" + member_id + "'>" + nick + "</a>";
+					}
 					
-				} else {				
 					jQuery('#chat_' + jid_id + ' .chat_messages').append(							
 						"<hr/><table><tr>" + 
-	         				"<td  class='conversations_picture'>" + 
-	                           sender_img + 
-	                       	"</td>" + 
-	                       	
-	                       	"<td  class='conversations_middle'>" + 
-	                       	"<label class='conversations_name'>" + profile_link + "</label>" + 
-	                       	"<div class='conversations_msg'>" + body + 
-							"</div>" + 
-	                       	"</td>" + 
+	         			"<td  class='conversations_picture'>" + 
+	                          sender_img + 
+	                      	"</td>" + 
+	                      	
+	                      	"<td  class='conversations_middle'>" + 
+	                      	"<label class='conversations_name'>" + profile_link + "</label>" + 
+	                      	"<div class='conversations_msg'>" + body + 
+						"</div>" + 
+	                      	"</td>" + 
 	                        	
-	                       	"<td class='conversations_time'>" + 
+	                      	"<td class='conversations_time'>" + 
 	                       	"<span>" + time + "</span> " +                            
 	                       	"</td>" + 
 	                    "</tr></table>");
-                }
-
-                Client.focus_chat(jid_id);
-				Client.scroll_chat(jid_id);
+	                    
+	                if (jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-state-active") && 
+						jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-tabs-selected") &&
+						jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-tabs-selected") &&
+						jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-state-active")) {
+					
+						Client.focus_chat(jid_id);
+						Client.scroll_chat(jid_id);
+					}    
+				}
+					
+				// if ((!jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-tabs-selected") &&
+					// !jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-state-active")) || 
+// 					
+					// (document.getElementById("inbox_" + room) == null) ||
+// 					
+					// (!jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-state-active") && 
+					// !jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-tabs-selected") &&
+					// jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-tabs-selected") &&
+					// jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-state-active"))) {
+// 							
+					// // Client.update_inbox(room, body, +new Date);
+				// }
+				
 				Client.update_inbox(room, body, +new Date);
+					
 				
 			} else if (Client.mucs[room]["joined"] == true) {
 				if (jQuery('#chat_' + jid_id).length !== 0) {
@@ -682,9 +708,11 @@ var Client = {
 	},
 	
 		
-	// helpers
+	// helpers	
 	update_inbox: function (from_bare, body, timestamp) {
-		var inbox_item = document.getElementById("inbox_" + from_bare);		
+		var inbox_item = document.getElementById("inbox_" + from_bare);
+		var jid_id = Client.jid_to_id(from_bare);
+		
 		if (inbox_item != null) {
 			jQuery("li").filter(inbox_item).find(".inbox_list_info")[0].textContent = body;
 			jQuery("li").filter(inbox_item).find(".inbox_list_time")[0].textContent = moment(timestamp).format('HH:mm:ss');
@@ -710,15 +738,11 @@ var Client = {
 		                       	"</td>" +
 		                        	
 		                       	"<td class='inbox_list_time'><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></td>" +
-		                        	
-		                       	"<!--<td><div class='inbox_list_read'>" +
-		                       			"<input title='Mark as Read' type='checkbox' class='inbox_list_read' id='inbox_read_' onclick='read(jQuery(this).attr('id'))'/>" +
-		                       	"</div></td>-->" +
 		                "</tr></table>" +
 		            "</li>";
 		            
 		        jQuery("#inbox_list li").first().before(inbox_item);
-				
+		        
 			} else {
 				//muc
 				var dataString = 'group_jid=' + from_bare;
@@ -741,10 +765,6 @@ var Client = {
 			                       	"</td>" +
 			                        	
 			                       	"<td class='inbox_list_time'>" + moment(timestamp).format('HH:mm:ss') + "</td>" +
-			                        	
-			                       	"<!--<td><div class='inbox_list_read'>" +
-			                       			"<input title='Mark as Read' type='checkbox' class='inbox_list_read' id='inbox_read_' onclick='read(jQuery(this).attr('id'))'/>" +
-			                       	"</div></td>-->" +
 			                "</tr></table>" +
 			            "</li>";
 			            
@@ -755,6 +775,58 @@ var Client = {
 			            console.log("error: " + exception);
 			        }		
 				});
+			}
+		}
+		
+		console.log(!jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-state-active") , 
+			!jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-tabs-selected") ,
+			!jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-tabs-selected") ,
+			!jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-state-active"));
+		
+		if ((!jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-tabs-selected") &&
+			!jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-state-active")) ||
+			
+			(document.getElementById("inbox_" + from_bare) == null) ||
+
+			(!jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-state-active") && 
+			!jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-tabs-selected") &&
+			jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-tabs-selected") &&
+			jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-state-active"))) {
+			
+			// update inbox tab text
+		    var nr = jQuery("#inbox_list li").filter(".inbox_list_item_new").length;
+			if (nr == 0) {
+				jQuery('a[href="#tab_inbox"]')[0].textContent = "Inbox list (1)";
+			} else {				
+				var found = false;
+				jQuery("#inbox_list li").filter(".inbox_list_item_new").each(function () {
+					if (jQuery(this).attr('id').slice(6, jQuery(this).attr('id').length) == from_bare) {
+						found = true;
+					}			
+				});
+				if (found == false) {
+					nr = parseInt(nr) + 1;
+				}				
+				jQuery('a[href="#tab_inbox"]')[0].textContent = jQuery('a[href^="#tab_inbox"]')[0].textContent.slice(0, jQuery('a[href="#tab_inbox"]')[0].textContent.length -3) + "(" + nr + ")";
+			}
+			
+			jQuery("li").filter(document.getElementById("inbox_" + from_bare)).addClass("inbox_list_item_new");
+		
+		}
+		
+		if (!jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-state-active") && 
+			!jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-tabs-selected")) {
+		
+			// update chat tab text
+			if (jQuery('#chat_' + jid_id).length !== 0) {
+				var tab_text = jQuery('a[href="#chat_' + jid_id + '"]')[0].textContent;
+			    var nr = tab_text.match(/\([0-9999]\)/);
+				if (nr != null) {
+					nr = parseInt(nr[0].slice(0, nr[0].length-1).slice(1, nr[0].length))+1;
+					jQuery('a[href="#chat_' + jid_id + '"]')[0].textContent = tab_text.slice(0, tab_text.length -3) + "(" + nr + ")";
+				} else {
+					jQuery('a[href="#chat_' + jid_id + '"]')[0].textContent = tab_text + " (1)";
+				}
 			}
 		}
 	},
@@ -911,8 +983,14 @@ var Client = {
 					}
 				});  
 						
-				Client.focus_chat(jid_id);
-				Client.scroll_chat(jid_id);
+				if (jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-state-active") && 
+					jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("ui-tabs-selected") &&
+					jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-tabs-selected") &&
+					jQuery('a[href="#tab_conversations"]').parent().hasClass("ui-state-active")) {
+				
+					Client.focus_chat(jid_id);
+					Client.scroll_chat(jid_id);
+				}
 			},
 			error: function (xhr, errorType, exception) {
 			    console.log("error: " + exception);
@@ -1066,47 +1144,10 @@ var Client = {
 		// remove notifications since user is now active
 		jQuery('#chat_' + jid_id + ' .chat_messages').parent().find('.chat_event').text('');
 	    
-		Client.focus_chat(jid_id);
-		Client.scroll_chat(jid_id);
+		// Client.focus_chat(jid_id);
+		// Client.scroll_chat(jid_id);
 	},
-	
-	/*add_new_muc_tab: function (jid) {
-		var jid_id = Client.jid_to_id(jid);
-		var groupname = Strophe.getNodeFromJid(jid);
-		
-		if (jQuery('#chat_' + jid_id).length === 0) {
-			jQuery('#subtabs').tabs( "add", '#chat_' + jid_id, groupname);
-			jQuery('#chat_' + jid_id).append(
-				"<div class='chat_messages fl-container-flex80'></div><div class='muc_roster fl-container-flex20'><ul></ul></div><hr/>" +
-				"<table class='conversations_table'><tr>" +
-					"<td class='conversations_table_spacer'></td>" +
-					"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + jid + "'></textarea></td>" +
-					"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/>" + 
-															"<input class='conversations_leave_muc' type='button' label='submit' value='Leave'/></td>" +
-				"</tr></table>");
-			
-		} else {	
-			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_textarea').removeAttr('disabled');
-			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_send').removeAttr('disabled');
-			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_leave_muc').removeAttr('disabled');
-		}
-		
-		jQuery('#chat_' + jid_id).data('jid', jid);
-			
-		// load older messages
-		//Client.load_older_messages(jid, Strophe.getBareJidFromJid(Client.my_full_jid), jid_id);
-			
-		var member_id = jQuery('.me').find('table').attr('id');
-		var profile_link = "<a href='profile.php?id=" + member_id + "'>" + Client.mucs[jid]["nickname"] + "</a>";		
-		jQuery("#chat_" + jid_id).find(".muc_roster ul").append("<li class='muc_roster_me' style='background-color:white; border:2px solid #BBB;'>" + profile_link + "</li>");
-		
-		var timestamp = +new Date;
-		jQuery('#chat_' + jid_id).find('.chat_messages').append("<hr/><div class='notice'>" +moment(timestamp).format('HH:mm:ss ') + "You joined the room</div>");
-			
-		Client.focus_chat(jid_id);
-		Client.scroll_chat(jid_id);
-	},*/
-	
+
 	scroll_chat: function (jid_id) {
 		var div = jQuery('#chat_' + jid_id + ' .chat_messages').get(0);
 		if (div != undefined) {
@@ -1280,8 +1321,6 @@ jQuery(document).bind('disconnected', function () {
 
 jQuery(document).bind('room_joined', function (ev, jid) {	
 	Client.mucs[jid]["joined"] = true;
-	
-	console.log("JOINED: ", jid);
 	
 	if (Client.mucs[jid]["invites_to"].length > 0) { 
 		//Client.add_new_muc_tab(jid);

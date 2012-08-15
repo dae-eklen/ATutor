@@ -30,24 +30,6 @@ function hide_div(){
 
 
 // ================= inbox list
-function read(chbox){
-	// console.log(chbox);
-	var clickedChbox = document.getElementById(chbox);
-	
-	if (jQuery(clickedChbox).is(":checked")){
-		var parentItem = findParentNode("inbox_list_item", clickedChbox);
-		jQuery(parentItem).removeClass("inbox_list_item");
-		jQuery(parentItem).addClass("inbox_list_item_checked");
-		jQuery(clickedChbox).attr("title").value = "Mark as Unread";
-	}
-	else{
-		var parentItem = findParentNode("inbox_list_item_checked", clickedChbox);
-		jQuery(parentItem).removeClass("inbox_list_item_checked");
-		jQuery(parentItem).addClass("inbox_list_item");
-		jQuery(clickedChbox).attr("title").value = "Mark as Read";
-	}
-}
-
 function load_inbox(){
 	var id = jQuery("div").filter(jQuery('#chat').find('div')[1]).attr('id');
 	var dataString = 'my_id=' + id;	
@@ -101,24 +83,39 @@ function load_inbox(){
 	});
 }
 
-function findParentNode(parentClass, childObj) {
-    var testObj = childObj.parentNode;
-    var count = 1;
-    while(testObj.getAttribute('class') != parentClass) {
-        testObj = testObj.parentNode;
-        count++;
-    }
-    
-    // console.log(testObj);
-    return testObj;
-}
-
 jQuery('.inbox_list_item').live('click', function () {
 	var jid = jQuery(this).attr('id').slice(6, jQuery(this).attr('id').length);
 	var name = jQuery(this).find('.inbox_list_name').text();
+	var jid_id = Client.jid_to_id(jid);
 
 	open_conversation_tab(jid, name, jQuery(this).hasClass('inbox_muc'));
+	
+	// remove notifications if they exist
+	update_inbox_text(jid);
+	if (jQuery(this).hasClass("inbox_list_item_new")) {
+		jQuery(this).removeClass("inbox_list_item_new");
+	}	
 });
+
+function update_inbox_text(jid) {
+	var found = false;
+	jQuery("#inbox_list li").filter(".inbox_list_item_new").each(function () {
+		if (jQuery(this).attr('id').slice(6, jQuery(this).attr('id').length) == jid) {
+			found = true;
+		}
+
+	});
+	
+	if (found == true) {
+		var nr = jQuery("#inbox_list li").filter(".inbox_list_item_new").length;
+		if (nr == 1) {
+			jQuery('a[href="#tab_inbox"]')[0].textContent = "Inbox list";
+		} else if (nr > 1) {
+			nr = parseInt(nr) - 1;
+			jQuery('a[href="#tab_inbox"]')[0].textContent = jQuery('a[href^="#tab_inbox"]')[0].textContent.slice(0, jQuery('a[href^="#tab_inbox"]')[0].textContent.length -3) + "(" + nr + ")";
+		}
+	}
+}
 
 
 // ================= conversation tabs
@@ -338,6 +335,13 @@ jQuery('.friends_column_wrapper').live('click', function () {
 	var name = jQuery(this).find('.friends_item_name').text();
 
 	open_conversation_tab(jid, name, false);
+	
+	// remove notifications if they exist
+	update_inbox_text(jid);
+	var obj = jQuery("li").filter(document.getElementById("inbox_" + jid));
+	if (obj.hasClass("inbox_list_item_new")) {
+		obj.removeClass("inbox_list_item_new");
+	}
 });
 
 function open_conversation_tab(jid, name, muc) {
@@ -353,11 +357,15 @@ function open_conversation_tab(jid, name, muc) {
 					"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + jid + "'></textarea></td>" +
 					"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/></td>" +
 				"</tr></table>");
-			jQuery('#chat_' + jid_id).data('jid', jid);
-			
+				
 			// load older messages
 			Client.load_older_messages(jid, Strophe.getBareJidFromJid(Client.my_full_jid), jid_id);
 		}
+		
+		jQuery('#chat_' + jid_id).data('jid', jid);
+		
+		Client.focus_chat(jid_id);
+		Client.scroll_chat(jid_id);
 		
 	} else {
 		if (jQuery('#chat_' + jid_id).length === 0) {
@@ -370,21 +378,21 @@ function open_conversation_tab(jid, name, muc) {
 					"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/>" + 
 															"<input class='conversations_leave_muc' type='button' label='submit' value='Leave'/></td>" +
 				"</tr></table>");
-				
-			jQuery('#chat_' + jid_id).data('jid', jid);
-			
-			// load older messages
-			Client.load_older_messages(null, jid, jid_id);
 			
 		} else {	
 			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_textarea').removeAttr('disabled');
 			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_send').removeAttr('disabled');
 			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_leave_muc').removeAttr('disabled');
 		}
-	}
-	
-	Client.focus_chat(jid_id);
-	Client.scroll_chat(jid_id);
+		
+		// load older messages
+		Client.load_older_messages(null, jid, jid_id);
+		
+		jQuery('#chat_' + jid_id).data('jid', jid);
+		
+		Client.focus_chat(jid_id);
+		Client.scroll_chat(jid_id);
+	}	
 }
 
 jQuery('.conversations_textarea').live('keypress', function (ev) {
@@ -445,6 +453,8 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 	 	Client.message_to_db(Strophe.getBareJidFromJid(Client.my_full_jid), Strophe.getBareJidFromJid(jid), body, timestamp, groupchat);
 	 	
 	 	Client.connection.send(message);
+	 	
+	 	Client.update_inbox(Strophe.getBareJidFromJid(jid), body, timestamp);
 	 	
 	} else {
 		var composing = jQuery(this).parent().parent().parent().parent().parent().data('composing');

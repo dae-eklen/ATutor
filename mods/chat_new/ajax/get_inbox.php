@@ -91,10 +91,6 @@ if (isset($_POST['my_id'])) {
 		                       	"</td>".
 		                        	
 		                       	"<td class='inbox_list_time'>".$row[timestamp]."</td>".
-		                        	
-		                       	"<!--<td><div class='inbox_list_read'>".
-		                       			"<input title='Mark as Read' type='checkbox' class='inbox_list_read' id='inbox_read_' onclick='read(jQuery(this).attr('id'))'/>".
-		                       	"</div></td>-->".
 		                "</tr></table>".
 		            "</li>";
 				}		
@@ -133,10 +129,6 @@ if (isset($_POST['my_id'])) {
 		                       	"</td>".
 		                        	
 		                       	"<td class='inbox_list_time'>".$row[timestamp]."</td>".
-		                        	
-		                       	"<!--<td><div class='inbox_list_read'>".
-		                       			"<input title='Mark as Read' type='checkbox' class='inbox_list_read' id='inbox_read_' onclick='read(jQuery(this).attr('id'))'/>".
-		                       	"</div></td>-->".
 		                "</tr></table>".
 		            "</li>";
 				}	
