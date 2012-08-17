@@ -1142,31 +1142,41 @@ var Client = {
     	return message.replace(exp,"<a href='$1'>$1</a>");
 	}
 };
-
+/*
 jQuery(window).unload(function() {
+	alert("unload");
 	//Client.connection.sync = true; // Switch to using synchronous requests since this is typically called onUnload.
 	Client.connection.pause();
 	//Client.connection.flush();
 	Client.connection.disconnect();
 	return false;
-});
+});*/
+
+
+
 
 // connection
 jQuery(document).bind('connect', function (ev, data) {
-	// get value from cookies 
-	temp = jQuery.cookie("connection");
-	var cookie_conn = JSON.parse(temp);
+	// get value from cookies 		
+	var conn_sid = jQuery.cookie("conn_sid");
+	var conn_rid = jQuery.cookie("conn_rid");
+	var conn_jid = jQuery.cookie("conn_jid");
+	console.log("FROM COOKIE: ", conn_sid, conn_rid, conn_jid);
 	
-	if (cookie_conn != null){
-		var conn = new Strophe.Connection("http://bosh.metajack.im:5280/xmpp-httpbind");	
+
+	var conn = new Strophe.Connection("http://bosh.metajack.im:5280/xmpp-httpbind");
 	
+	if (document.getElementById('peek') != null) {
 		conn.xmlInput = function (body) {
 		    Console.show_traffic(body, 'incoming');
 		};
 		conn.xmlOutput = function (body) {
 		    Console.show_traffic(body, 'outgoing');
 		};
-		    
+	}
+	
+	//if (conn_sid == null && conn_rid == null && conn_jid == null){
+	if (true){	    
 		conn.connect(data.jid, data.password, function (status) {
 			if (status === Strophe.Status.CONNECTED) {
 				var course_members_jids = new Array();
@@ -1205,8 +1215,11 @@ jQuery(document).bind('connect', function (ev, data) {
 					});
 				} else {
 					// store connection into cookies for later use
-					//var json_text = JSON.stringify(conn);
-					//jQuery.cookie("connection", json_text, {expires:365});
+					jQuery.cookie("conn_sid", conn.sid, {expires: 365, path: '/'});
+					jQuery.cookie("conn_rid", conn.rid, {expires: 365, path: '/'});
+					jQuery.cookie("conn_jid", conn.jid, {expires: 365, path: '/'});
+					console.log("WROTE TO COOKIES: ", conn.sid, conn.rid, typeof(conn.jid), conn.jid);
+			
 					jQuery(document).trigger('connected', [course_members_jids]);
 				}
 			} 
@@ -1218,10 +1231,10 @@ jQuery(document).bind('connect', function (ev, data) {
 			}
 		});
 		Client.connection = conn;
-		console.log(Strophe.Connection.prototype.isPrototypeOf(conn));
+		
 	} else {
-		Client.connection = cookie_conn;
-		console.log(Strophe.Connection.prototype.isPrototypeOf(conn));
+		console.log("GET FROM COOKIE: ", conn_sid, conn_rid, conn_jid);
+		conn.attach(conn_jid, conn_sid, parseInt(conn_rid) + 1);
 		
 		jQuery(document).trigger('connected');
 	}

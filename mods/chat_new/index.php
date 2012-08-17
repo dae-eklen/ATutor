@@ -3,7 +3,9 @@ define('AT_INCLUDE_PATH', '../../include/');
 require (AT_INCLUDE_PATH.'vitals.inc.php');
 
 $_custom_head .= '<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/jquery-cookie/jquery.cookie.js"></script>
 		
+				
 		<script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/xmpp_client.js"></script>
 		<script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/xmpp_console.js"></script>
 		<script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/interface.js"></script>
@@ -80,7 +82,7 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 	</div><!--end chat-->
 
 
-	<!--Peek XMPP console-->
+	<!--Peek XMPP console (comment to hide) -->
 	<h4>Peek XMPP console</h4>
 	<div id="peek">
 		<div id='console'></div>
@@ -118,6 +120,22 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 	    hide_div();
 	    
 	    load_inbox();
+	    
+//	     window.onbeforeunload = function(event)
+//    {
+//       alert('asasa');
+//    };
+
+//window.onbeforeunload = function (e) {
+//  e = e || window.event;
+//
+//  if (e) {
+//    alert('asasas');
+//  }
+//
+//  return 'Any string';
+//};
+
 	    
 	</script>
 
