@@ -432,7 +432,7 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 
 	if (ev.which === 13) {
 		ev.preventDefault();
-		var body = jQuery(this).val();
+		var body = Client.return_links(jQuery(this).val());
 		if (body == '') {
 			return;
 		} else if (body.length > 65535) { // fits TEXT in MySQL
@@ -505,7 +505,7 @@ jQuery('.conversations_send').live('click', function () {
 	var jid = jQuery(this).parent().parent().find('.conversations_textarea').attr('id').slice(5, jQuery(this).parent().parent().find('.conversations_textarea').attr('id').length);
 	
 	var jid_id = Client.jid_to_id(Strophe.getBareJidFromJid(jid));
-	var body = jQuery(this).parent().parent().find('td').find('textarea').val();
+	var body = Client.return_links(jQuery(this).parent().parent().find('td').find('textarea').val());
 	if (body == '') {
 		jQuery(this).parent().parent().find('td').find('textarea').focus();
 		return;

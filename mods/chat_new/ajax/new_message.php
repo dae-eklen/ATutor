@@ -2,7 +2,7 @@
 if (isset($_POST['from']) && isset($_POST['to']) && isset($_POST['msg']) && isset($_POST['timestamp']) && isset($_POST['groupchat'])){
 	$from = $_POST['from'];
 	$to = $_POST['to'];
-	$msg = $_POST['msg'];
+	$msg = urlencode($_POST['msg']);
 	$timestamp = $_POST['timestamp'];
 	
 	if ($_POST['groupchat'] == 0){

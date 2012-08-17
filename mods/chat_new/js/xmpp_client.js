@@ -670,7 +670,7 @@ var Client = {
 		var jid_id = Client.jid_to_id(from_bare);
 		
 		if (inbox_item != null) {
-			jQuery("li").filter(inbox_item).find(".inbox_list_info")[0].textContent = body;
+			jQuery("li").filter(inbox_item).find(".inbox_list_info").replaceWith("<div class='inbox_list_info'>" + body + "</div>");
 			jQuery("li").filter(inbox_item).find(".inbox_list_time")[0].textContent = moment(timestamp).format('HH:mm:ss');
 			
 			// change order
@@ -1136,6 +1136,11 @@ var Client = {
 		jQuery('#subtabs').tabs('select', '#chat_' + jid_id);
 		jQuery('#chat_' + jid_id + ' textarea').focus();
 	},
+	
+	return_links: function (message) {
+		var exp = /(\b((https?|ftp|file):\/\/|www.)[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    	return message.replace(exp,"<a href='$1'>$1</a>");
+	}
 };
 
 jQuery(window).unload(function() {

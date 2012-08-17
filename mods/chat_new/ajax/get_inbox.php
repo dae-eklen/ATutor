@@ -87,7 +87,7 @@ if (isset($_POST['my_id'])) {
 		         				"<td><img class='picture' src='" .$_base_path. "get_profile_img.php?id=" .$row_from[member_id]. "' alt='userphoto'/></td>".
 		                       	"<td class='inbox_list_middle'>".
 		                        	"<label class='inbox_list_name'><a href='profile.php?id=" .$row_from[member_id]. "'>".$row_from[first_name]. ' ' .$row_from[last_name]."</a></label>".
-		                        	"<div class='inbox_list_info'>".$row[msg]."</div>".
+		                        	"<div class='inbox_list_info'>".urldecode($row[msg])."</div>".
 		                       	"</td>".
 		                        	
 		                       	"<td class='inbox_list_time'>".$row[timestamp]."</td>".
@@ -125,7 +125,7 @@ if (isset($_POST['my_id'])) {
 		                       	"<td class='inbox_list_middle'>".
 		                        	"<label class='inbox_list_name'>".$groupname."</label>".
 		                        	"<label class='inbox_list_nr'> (".$nr." members)</label>".
-		                        	"<div class='inbox_list_info'>".$row[msg]."</div>".
+		                        	"<div class='inbox_list_info'>".urldecode($row[msg])."</div>".
 		                       	"</td>".
 		                        	
 		                       	"<td class='inbox_list_time'>".$row[timestamp]."</td>".

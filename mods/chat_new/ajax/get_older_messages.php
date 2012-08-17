@@ -28,7 +28,7 @@ if (isset($_POST['from']) && isset($_POST['to']) && isset($_POST['offset'])){
                         	
                         	"<td  class='conversations_middle'>" . 
                         	"<label class='conversations_name'><a href='profile.php?id=" .$row_from[member_id]. "'>" .$row_from[first_name] . ' ' . $row_from[last_name]. "</a></label>" . 
-                        	"<div class='conversations_msg'>"  .$row[msg].  
+                        	"<div class='conversations_msg'>"  .urldecode($row[msg]).  
 							"</div>" . 
                         	"</td>" . 
                         	
@@ -62,7 +62,7 @@ if (isset($_POST['from']) && isset($_POST['to']) && isset($_POST['offset'])){
                         	
                         	"<td  class='conversations_middle'>" . 
                         	"<label class='conversations_name'><a href='profile.php?id=" .$row_from[member_id]. "'>" .$row_from[first_name] . ' ' . $row_from[last_name]. "</a></label>" . 
-                        	"<div class='conversations_msg'>"  .$row[msg].  
+                        	"<div class='conversations_msg'>"  .urldecode($row[msg]).  
 							"</div>" . 
                         	"</td>" . 
                         	
@@ -101,7 +101,7 @@ if (isset($_POST['from']) && isset($_POST['to']) && isset($_POST['offset'])){
                         	
                         	"<td  class='conversations_middle'>" . 
                         	"<label class='conversations_name'><a href='profile.php?id=" .$row_from[member_id]. "'>" .$row_from[first_name] . ' ' . $row_from[last_name]. "</a></label>" . 
-                        	"<div class='conversations_msg'>"  .$row[msg].  
+                        	"<div class='conversations_msg'>"  .urldecode($row[msg]).  
 							"</div>" . 
                         	"</td>" . 
                         	
@@ -133,7 +133,7 @@ if (isset($_POST['from']) && isset($_POST['to']) && isset($_POST['offset'])){
                         	
                         	"<td  class='conversations_middle'>" . 
                         	"<label class='conversations_name'><a href='profile.php?id=" .$row_from[member_id]. "'>" .$row_from[first_name] . ' ' . $row_from[last_name]. "</a></label>" . 
-                        	"<div class='conversations_msg'>"  .$row[msg].  
+                        	"<div class='conversations_msg'>"  .urldecode($row[msg]).  
 							"</div>" . 
                         	"</td>" . 
                         	
