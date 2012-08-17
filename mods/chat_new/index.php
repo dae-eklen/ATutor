@@ -98,6 +98,22 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 	<script>
 	    jQuery("#tabs, #subtabs").tabs();
 	    
+	    jQuery('#subtabs').tabs({
+			select: function(event, ui){
+		        var jid_id = ui.tab.hash;
+		        on_select_subtab(jid_id.slice(6, jid_id.length));
+			}
+		});
+		
+		jQuery('#tabs').tabs({
+			select: function(event, ui){
+				if (ui.tab.hash == "#tab_conversations") {
+					on_select_conversation_tab();
+				}
+			}
+		});
+		
+	    
 	    refreshForm();
 	    hide_div();
 	    

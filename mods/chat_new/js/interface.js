@@ -94,7 +94,8 @@ jQuery('.inbox_list_item').live('click', function () {
 	update_inbox_text(jid);
 	if (jQuery(this).hasClass("inbox_list_item_new")) {
 		jQuery(this).removeClass("inbox_list_item_new");
-	}	
+	}
+	
 });
 
 function update_inbox_text(jid) {
@@ -103,7 +104,6 @@ function update_inbox_text(jid) {
 		if (jQuery(this).attr('id').slice(6, jQuery(this).attr('id').length) == jid) {
 			found = true;
 		}
-
 	});
 	
 	if (found == true) {
@@ -111,8 +111,9 @@ function update_inbox_text(jid) {
 		if (nr == 1) {
 			jQuery('a[href="#tab_inbox"]')[0].textContent = "Inbox list";
 		} else if (nr > 1) {
+			var len = nr.toString().length + 2;
 			nr = parseInt(nr) - 1;
-			jQuery('a[href="#tab_inbox"]')[0].textContent = jQuery('a[href^="#tab_inbox"]')[0].textContent.slice(0, jQuery('a[href^="#tab_inbox"]')[0].textContent.length -3) + "(" + nr + ")";
+			jQuery('a[href="#tab_inbox"]')[0].textContent = jQuery('a[href^="#tab_inbox"]')[0].textContent.slice(0, jQuery('a[href^="#tab_inbox"]')[0].textContent.length - len) + "(" + nr + ")";
 		}
 	}
 }
@@ -126,7 +127,9 @@ jQuery(function() {
 
 		// tabs init with a custom tab template and an "add" callback filling in the content
 		var jQuerysubtabs = jQuery( "#subtabs").tabs({
-			tabTemplate: "<li><a href='#{href}'>#{label}</a><span class='ui-icon ui-icon-minus' onclick='minimize_medium();'>Minimize Tab</span><span class='ui-icon ui-icon-close'>Remove Tab</span></li>"
+			//tabTemplate: "<li><a href='#{href}'>#{label}</a><span class='ui-icon ui-icon-minus' onclick='minimize_medium();'>Minimize Tab</span><span class='ui-icon ui-icon-close'>Remove Tab</span></li>"
+			tabTemplate: "<li><a href='#{href}'>#{label}</a><span class='ui-icon ui-icon-close'>Remove Tab</span></li>"
+
 		});
 
 		// close icon: removing the tab on click
@@ -137,11 +140,47 @@ jQuery(function() {
 		});
 });
 
-function minimize_medium(){
-	console.log("minimize_medium");
+function on_select_subtab(jid_id){
+	if (jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("conversation_tab_new_msg")) {
+		var tab_text = jQuery('a[href="#chat_' + jid_id + '"]')[0].textContent;
+		var nr = tab_text.match(/\([0-9999]\)/);
+		if (nr != null) {
+			var len = nr[0].length;
+			jQuery('a[href="#chat_' + jid_id + '"]')[0].textContent = tab_text.slice(0, tab_text.length - (len + 1));
+		}		
+		
+		jQuery('a[href="#chat_' + jid_id + '"]').parent().removeClass("conversation_tab_new_msg");
+		
+		var jid = jQuery('#chat_' + jid_id).find('.conversations_textarea').attr('id').slice(5, jQuery('#chat_' + jid_id).find('.conversations_textarea').attr('id').length);
+		
+		update_inbox_text(jid);
+		if (jQuery("li").filter(document.getElementById("inbox_" + jid)).hasClass("inbox_list_item_new")) {
+			jQuery("li").filter(document.getElementById("inbox_" + jid)).removeClass("inbox_list_item_new");
+		}
+	}
+	
+	// scroll and focus
+	
+	//console.log(jQuery('#chat_' + jid_id + ' textarea'));
+	jQuery('#chat_' + jid_id + ' textarea').focus();
+	//Client.scroll_chat(jid_id);
+	//TODO!!!!!
+	var div = jQuery('#chat_' + jid_id + ' .chat_messages').get(0);
+	if (div != undefined) {
+		//console.log("ev scroll: ", div.scrollTop, div.scrollHeight, jid_id, jQuery('#chat_' + jid_id + ' .chat_messages'), div);
+		div.scrollTop = div.scrollHeight;
+	}
 }
 
-
+function on_select_conversation_tab() {
+	if (jQuery("#subtabs li").length > 0) {
+		var selected_subtab_chat_jid_id = jQuery("li").filter(jQuery("#subtabs li")[jQuery("#subtabs").tabs('option', 'selected')]).find('a').attr('href');
+		// var jid = jQuery(selected_subtab_chat_jid_id).find('.conversations_textarea').attr('id').slice(5, jQuery(selected_subtab_chat_jid_id).find('.conversations_textarea').attr('id').length);
+		var jid_id = selected_subtab_chat_jid_id.slice(6, selected_subtab_chat_jid_id.length);
+		
+		on_select_subtab(jid_id);
+	}
+}	
 	
 // ================= friends
 jQuery('.friends_column_wrapper_classmates').live('click', function () {
@@ -185,19 +224,12 @@ function refreshForm(){
 	if (friendsMembers){
 		document.getElementById("nr_of_members").innerHTML = friendsMembers.childNodes.length - 2;
 		
-		if (friendsMembers.childNodes.length - 2 == 0){
+		if (friendsMembers.childNodes.length - 2 <= 2){
 			document.getElementById("groupname").disabled = true;
 			document.getElementById("friends_selected_bnt").disabled = true;
 			document.getElementById("friends_selected_label").style.color = '#555';
 		}
-		else if (friendsMembers.childNodes.length - 2 == 1){
-			document.getElementById("groupname").disabled = true;
-			if (validateGroupname() == false){
-				document.getElementById("friends_selected_bnt").disabled = false;
-			document.getElementById("friends_selected_label").style.color = '#555';
-			}
-		}
-		else if (friendsMembers.childNodes.length - 2 >= 2){
+		else if (friendsMembers.childNodes.length - 2 >= 3){
 			document.getElementById("groupname").disabled = false;
 			if (validateGroupname() == false){
 				document.getElementById("friends_selected_bnt").disabled = true;
@@ -208,7 +240,6 @@ function refreshForm(){
 
 function validateGroupname(){
 	var groupname = document.getElementById("groupname");
-	// console.log(groupname.value);
 	if (groupname.value != ""){
 		document.getElementById("friends_selected_bnt").disabled = false;
 		if (groupname.disabled == false && (document.getElementById("friends_members").childNodes.length >= 2)) {
@@ -240,7 +271,6 @@ jQuery('#friends_selected_bnt').live('click', function () {
 					"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + jid + "'></textarea></td>" +
 					"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/></td>" +
 				"</tr></table>");
-			jQuery('#chat_' + jid_id).data('jid', jid);
 			
 			// load older messages
 			Client.load_older_messages(jid, Strophe.getBareJidFromJid(Client.my_full_jid), jid_id);
@@ -287,9 +317,6 @@ jQuery('#friends_selected_bnt').live('click', function () {
 			}).c('x', {xmlns: "http://jabber.org/protocol/muc"}));
 
 			Client.mucs[groupname + "@conference.talkr.im"] = { "joined":false, "participants":new Array(), "invites_to":jids, "nickname":my_groupname};
-			console.log("#friends_selected_bnt create: ", Client.mucs[groupname + "@conference.talkr.im"]["joined"], 
-				Client.mucs[groupname + "@conference.talkr.im"]["participants"], Client.mucs[groupname + "@conference.talkr.im"]["invites_to"], 
-				Client.mucs[groupname + "@conference.talkr.im"]["nickname"]);
 
 		} else if (jQuery('#chat_' + jid_id).length !== 0) {
 			Client.focus_chat(jid_id);
@@ -357,12 +384,15 @@ function open_conversation_tab(jid, name, muc) {
 					"<td><div class='chat_event'></div><textarea class='conversations_textarea' id='text_" + jid + "'></textarea></td>" +
 					"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/></td>" +
 				"</tr></table>");
-				
+			
 			// load older messages
 			Client.load_older_messages(jid, Strophe.getBareJidFromJid(Client.my_full_jid), jid_id);
-		}
 		
-		jQuery('#chat_' + jid_id).data('jid', jid);
+		} else if (jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("conversation_tab_new_msg")) {
+			jQuery('a[href="#chat_' + jid_id + '"]')[0].textContent = name;				
+			jQuery('a[href="#chat_' + jid_id + '"]').parent().removeClass("conversation_tab_new_msg");
+			
+		}
 		
 		Client.focus_chat(jid_id);
 		Client.scroll_chat(jid_id);
@@ -378,17 +408,19 @@ function open_conversation_tab(jid, name, muc) {
 					"<td class='conversations_table_button'><input class='conversations_send' type='button' label='submit' value='Send'/>" + 
 															"<input class='conversations_leave_muc' type='button' label='submit' value='Leave'/></td>" +
 				"</tr></table>");
+				
+			// load older messages
+			Client.load_older_messages(null, jid, jid_id);
 			
+		} else if (jQuery('a[href="#chat_' + jid_id + '"]').parent().hasClass("conversation_tab_new_msg")) {
+			jQuery('a[href="#chat_' + jid_id + '"]')[0].textContent = name;				
+			jQuery('a[href="#chat_' + jid_id + '"]').parent().removeClass("conversation_tab_new_msg");
+		
 		} else {	
 			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_textarea').removeAttr('disabled');
 			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_send').removeAttr('disabled');
 			jQuery('#chat_' + jid_id).find('.conversations_table').find('.conversations_leave_muc').removeAttr('disabled');
 		}
-		
-		// load older messages
-		Client.load_older_messages(null, jid, jid_id);
-		
-		jQuery('#chat_' + jid_id).data('jid', jid);
 		
 		Client.focus_chat(jid_id);
 		Client.scroll_chat(jid_id);
@@ -396,10 +428,7 @@ function open_conversation_tab(jid, name, muc) {
 }
 
 jQuery('.conversations_textarea').live('keypress', function (ev) {
-	var jid = jQuery(this).parent().parent().parent().parent().parent().data('jid');
-	if (jid == undefined) {
-		var jid = jQuery(".conversations_textarea").attr("id").slice(5, jQuery(".conversations_textarea").attr("id").length);
-	}
+	var jid = jQuery(this).parent().find('.conversations_textarea').attr('id').slice(5, jQuery(this).parent().find('.conversations_textarea').attr('id').length);
 
 	if (ev.which === 13) {
 		ev.preventDefault();
@@ -412,6 +441,7 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 		}
 		
 		var timestamp = +new Date;
+		
 		if (jid.search("@conference.talkr.im") == -1) {
 			// chat
 			var message = $msg({to: jid, "type": "chat"}).c('body').t(body).up()
@@ -472,7 +502,8 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 
 // ================= send button
 jQuery('.conversations_send').live('click', function () {
-	var jid = jQuery(this).parent().parent().parent().parent().parent().data('jid');
+	var jid = jQuery(this).parent().parent().find('.conversations_textarea').attr('id').slice(5, jQuery(this).parent().parent().find('.conversations_textarea').attr('id').length);
+	
 	var jid_id = Client.jid_to_id(Strophe.getBareJidFromJid(jid));
 	var body = jQuery(this).parent().parent().find('td').find('textarea').val();
 	if (body == '') {
@@ -539,9 +570,7 @@ jQuery('.conversations_leave_muc').live('click', function () {
 	var my_groupname = Client.mucs[jid]["nickname"];
 	var jid_id = Client.jid_to_id(jid);
 	
-	console.log(".conversations before leave delete: ", Client.mucs[jid]);
 	delete Client.mucs[jid];
-	console.log(".conversations leave delete: ", Client.mucs[jid]);
 	
 	jQuery('#chat_' + jid_id).find('li').remove(":contains('" + my_groupname + "')");
 	
