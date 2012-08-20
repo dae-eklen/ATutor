@@ -14,15 +14,11 @@ $_custom_head .= '<script type="text/javascript" src="https://ajax.googleapis.co
 	    <script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/strophe&flXHR/strophe.muc.js"></script>
 	    <script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/strophe&flXHR/flXHR.js"></script>
 	    <script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/strophe&flXHR/strophe.flxhr.js"></script>	   
-
-	    <script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/JSON-js/json2.js"></script>
-	    <script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/cookies.js"></script>
 	    		
 	    <script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/moment.min.js"></script>';
 
 $_custom_css = $_base_path.'mods/chat_new/module.css'; // use a custom stylesheet
 require (AT_INCLUDE_PATH.'header.inc.php');
-
 
 ?>
 

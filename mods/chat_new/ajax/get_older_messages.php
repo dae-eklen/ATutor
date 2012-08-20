@@ -1,4 +1,5 @@
 <?php
+if (!defined('AT_INCLUDE_PATH')) { exit; }
 
 if (isset($_POST['from']) && isset($_POST['to']) && isset($_POST['offset'])){
 	// private messages

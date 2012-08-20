@@ -1,4 +1,6 @@
 <?php
+if (!defined('AT_INCLUDE_PATH')) { exit; }
+
 if (isset($_POST['id'])){
 	$my_id = $_POST['id'];
 	

@@ -1,4 +1,6 @@
 <?php
+if (!defined('AT_INCLUDE_PATH')) { exit; }
+
 // called when we need to check if received data is from course member
 
 if (isset($_POST['jid'])){

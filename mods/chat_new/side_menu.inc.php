@@ -37,7 +37,7 @@ ob_start();
 		<?php
 		if (count($course_participants_online) == 0 && count($course_participants_offline) == 0) {
 			?> 
-			The course has no chat members yet. Join course chat <a href="<?php echo $_base_path; ?>/mods/chat_new/">here</a>.
+			The course has no chat members yet. Join course chat <a href="<?php echo $_base_path; ?>mods/chat_new/index.php">here</a>.
 			<?php
 		}
 		if (count($course_participants_online) != 0) {
@@ -53,7 +53,7 @@ ob_start();
 				}
 				?>
 				    		<table class="friends_item" id="<?php echo $participant[1]; ?>"><tr>
-	         					<td><img src="<?php echo $_base_path; ?>get_profile_img.php?id=<?php echo $participant[1]; ?>" class="profile-picture friends_item_picture" alt="userphoto" />
+	         					<td><img src="<?php echo $_base_path; ?>get_profile_img.php?id=<?php echo $participant[1]; ?>" class="friends_item_picture" alt="userphoto" />
 	         					</td>
 	                        	<td class="friends_item_name"><?php echo $participant[2].' '.$participant[3]; ?></td>
 	                        	<td class="friends_item_status">Online</td>
@@ -66,7 +66,7 @@ ob_start();
 			foreach($course_participants_offline as $participant){
 				?><div class="friends_column_wrapper offline" id="<?php echo $participant[0]; ?>">
 	                    	<table class="friends_item" id="<?php echo $participant[1]; ?>"><tr>
-	         					<td><img src="<?php echo $_base_path; ?>get_profile_img.php?id=<?php echo $participant[1]; ?>" class="profile-picture friends_item_picture" alt="userphoto" /></td>
+	         					<td><img src="<?php echo $_base_path; ?>get_profile_img.php?id=<?php echo $participant[1]; ?>" class="friends_item_picture" alt="userphoto" /></td>
 	                        	<td class="friends_item_name"><?php echo $participant[2].' '.$participant[3]; ?></td>
 	                        	<td class="friends_item_status"></td>
 	                    	</tr></table>

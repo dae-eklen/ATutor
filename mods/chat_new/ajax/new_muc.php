@@ -1,4 +1,6 @@
 <?php
+if (!defined('AT_INCLUDE_PATH')) { exit; }
+
 if (isset($_POST['roomname']) && isset($_POST['members'])){
 	$roomname = $_POST['roomname'];
 	$members = explode("  ", $_POST['members']);

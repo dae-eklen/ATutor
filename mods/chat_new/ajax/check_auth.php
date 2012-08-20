@@ -1,4 +1,6 @@
 <?php
+if (!defined('AT_INCLUDE_PATH')) { exit; }
+
 // new entry in chat_members table
 if (isset($_POST['id']) && isset($_POST['jid']) && isset($_POST['pass']) && isset($_POST['course_id'])){
 	$id = $_POST['id'];
@@ -11,10 +13,10 @@ if (isset($_POST['id']) && isset($_POST['jid']) && isset($_POST['pass']) && isse
 		$sql = "INSERT INTO ".TABLE_PREFIX."chat_members (member_id, jid, password) VALUES ('$id', '$jid', '$pass')";
 		$resp = mysql_query($sql,$db);
 		if ($resp){
-			$sql = "SELECT first_name, last_name FROM ".TABLE_PREFIX."members WHERE member_id=$id";
+			$sql = "SELECT first_name, last_name, member_id FROM ".TABLE_PREFIX."members WHERE member_id=$id";
 			$result = mysql_query($sql, $db);
 			$row = mysql_fetch_assoc($result);			
-			$to_echo = $jid. ' ' .$row['first_name']. ' ' .$row['last_name']. ' ' .$_base_path."images/nophoto.gif";
+			$to_echo = $jid. ' ' .$row['first_name']. ' ' .$row['last_name']. ' get_profile_img.php?id='.$row['member_id']. ' ' .$row['member_id'];
 			
 			$sql = "SELECT jid FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."course_enrollment E USING (member_id) INNER JOIN ".TABLE_PREFIX."members M
 				WHERE E.course_id=".$course_id."

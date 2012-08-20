@@ -1,4 +1,6 @@
 <?php
+if (!defined('AT_INCLUDE_PATH')) { exit; }
+
 if (isset($_POST['to']) && isset($_POST['my_jid'])){
 	$to = $_POST['to'];
 	$my_jid = $_POST['my_jid'];

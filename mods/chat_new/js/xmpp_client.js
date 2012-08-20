@@ -18,20 +18,20 @@ var Client = {
 		});
 		console.log('roster: ' + Client.roster);
 		
-		// set up presence handler and send initial presence
-		Client.connection.addHandler(Client.on_presence_subscribe, null, "presence", "subscribe");
-		Client.connection.addHandler(Client.on_presence_subscribed, null, "presence", "subscribed");
+		// send initial presence
 		Client.connection.send($pres());
 		
 		// everyone in roster except me is shown as offline till presence is received
 		jQuery('.friends_column_wrapper').each(function () {
 			if (jQuery(this)[0].className.search('me') == -1) {
-				Client.replace_contact(jQuery(this)[0], false, false);
+				Client.replace_contact(jQuery(this)[0], false);
 			}
 		});
 	},
 	
-	on_presence_subscribe: function (presence) {	
+	on_presence_subscribe: function (presence) {
+		//console.log("SUBSCRIBE!!!", presence);
+		
 		var from = jQuery(presence).attr('from');
 		var from_bare = Strophe.getBareJidFromJid(from);
 		
@@ -73,13 +73,20 @@ var Client = {
 				});
 				
 				Client.roster.push(from_bare);
-				console.log("just added- " + Client.roster);
+				//console.log("just added- " + Client.roster);
+				Client.get_new_contact_data(from_bare);
+				Client.connection.send($pres().c('show').t(Client.my_full_jid));
+				Client.last_presence_sent = +new Date;
 			}
 			
-			console.log("Client.subscribed- " + Client.subscribed + "; Client.subscribe-" + Client.subscribe);
+			//console.log("Client.subscribed- " + Client.subscribed + "; Client.subscribe-" + Client.subscribe);
+			
+			return true;
 	},
 	
 	on_presence_subscribed: function (presence) {
+		//console.log("SUBSCRIBED!!!", presence);
+		
 		var from = jQuery(presence).attr('from');
 		var from_bare = Strophe.getBareJidFromJid(from);
 		
@@ -113,13 +120,18 @@ var Client = {
 				});
 				
 				Client.roster.push(from_bare);
-				console.log("just added- " + Client.roster);
+				//console.log("just added- " + Client.roster);
+				Client.get_new_contact_data(from_bare);
+				Client.connection.send($pres().c('show').t(Client.my_full_jid));
+				Client.last_presence_sent = +new Date;
 			}
 			
-			console.log("Client.subscribed- " + Client.subscribed + "; Client.subscribe-" + Client.subscribe);
+			//console.log("Client.subscribed- " + Client.subscribed + "; Client.subscribe-" + Client.subscribe);
+			
+			return true;
 	},
 	
-	on_presence: function (presence) {
+	on_presence: function (presence) {		
 		var ptype = jQuery(presence).attr('type');
 		var from = jQuery(presence).attr('from');
 		var from_bare = Strophe.getBareJidFromJid(from);
@@ -127,16 +139,18 @@ var Client = {
 		var to_bare = Strophe.getBareJidFromJid(jQuery(presence).attr('to'));
 		var nick = Strophe.getResourceFromJid(from);
 		
-		// if ((from.search("@conference.talkr.im") == -1) && (from_bare != Strophe.getBareJidFromJid(Client.my_full_jid))) {
-			// console.log('from: ' + from + '  to: ' + jQuery(presence).attr('to') + '  ptype: ' + ptype + '  show: ' + jQuery(presence).find("show").text());
-		// }
-		
-		
-		if (Client.my_full_jid == '') {
-			Client.my_full_jid = jQuery(presence).attr('to');
-			Client.connection.send($pres().c('show').t(Client.my_full_jid));
-			Client.last_presence_sent = +new Date;
+		if (ptype == "subscribe") {
+			Client.on_presence_subscribe(presence);
+			return true;
+			
+		} else if (ptype == "subscribed") {
+			Client.on_presence_subscribed(presence);
+			return true;
 		}
+		
+		//if ((from.search("@conference.talkr.im") == -1) && (from_bare != Strophe.getBareJidFromJid(Client.my_full_jid))) {
+			//console.log('from: ' + from + '  to: ' + jQuery(presence).attr('to') + '  ptype: ' + ptype + '  show: ' + jQuery(presence).find("show").text());
+		//}
 
 		// do nothing if received data is not from course members (for 'chat')
 		if (Client.check_membership(from_bare) == false) {
@@ -269,11 +283,11 @@ var Client = {
 
 				if (ptype === 'unavailable' && jQuery("div").filter(document.getElementById(from_bare)).data('jid') == from) {
 					// ATutor chat user
-					// console.log(from + ' unavailable from ATutor chat');
+					console.log(from + ' unavailable from ATutor chat');
 					online = false;
 				} else if (ptype === 'unavailable' && jQuery("div").filter(document.getElementById(from_bare)).data('jid') == undefined) {
 					// other client user
-					// console.log(from + ' unavailable from other client');
+					console.log(from + ' unavailable from other client');
 					online = false;
 				} else {
 					var show = jQuery(presence).find("show").text();
@@ -287,7 +301,8 @@ var Client = {
 				}	
 				
 				if (jQuery(presence).find("item[affiliation='owner']").length == 0 &&
-					jQuery(presence).find("item[affiliation='member']").length == 0) {
+					jQuery(presence).find("item[affiliation='member']").length == 0 &&
+					contact_roster != null) {
 					
 					Client.replace_contact(contact_roster, online);	
 				}
@@ -664,11 +679,30 @@ var Client = {
 	},
 	
 		
-	// helpers	
+	// helpers
+	get_new_contact_data: function (from_bare) {
+		var dataString = 'from_bare=' + from_bare;
+		jQuery.ajax({
+			type: "POST",
+			url: "ATutor/mods/chat_new/ajax/get_new_contact_data.php",
+			data: dataString,
+			cache: false,
+			success: function (data) {			
+				if (document.getElementById(jQuery(data).attr("id")) == null) {
+					jQuery("#roster").append(data);
+					//Client.replace_contact(document.getElementById(document.getElementById(jQuery(data).attr("id"))), jQuery(data).hasClass("online"));
+				}				
+			},
+			error: function (xhr, errorType, exception) {
+				console.log("error: " + exception);
+			}		
+		});
+	},
+		
 	update_inbox: function (from_bare, body, timestamp) {
 		var inbox_item = document.getElementById("inbox_" + from_bare);
 		var jid_id = Client.jid_to_id(from_bare);
-		
+	
 		if (inbox_item != null) {
 			jQuery("li").filter(inbox_item).find(".inbox_list_info").replaceWith("<div class='inbox_list_info'>" + body + "</div>");
 			jQuery("li").filter(inbox_item).find(".inbox_list_time")[0].textContent = moment(timestamp).format('HH:mm:ss');
@@ -676,7 +710,7 @@ var Client = {
 			// change order
 			jQuery("#inbox_list")[0].removeChild(inbox_item);
 			jQuery("#inbox_list li").first().before(inbox_item);
-			
+		
 		} else {
 			// add new item
 			if (from_bare.indexOf('@conference.talkr.im') == -1) {
@@ -697,7 +731,7 @@ var Client = {
 		                "</tr></table>" +
 		            "</li>";
 		            
-		        jQuery("#inbox_list li").first().before(inbox_item);
+		        jQuery("#inbox_list").prepend(inbox_item);
 		        
 			} else {
 				//muc
@@ -1026,15 +1060,26 @@ var Client = {
 		}
 	},
 	
-	show_new_contact: function (jid, name, pic) {
+	show_new_contact: function (jid, name, pic, id) {
 		group_el = jQuery('.online');
-		to_insert = "<div class='friends_column_wrapper online' id=" + jid + " onclick='console.log(jQuery(this).attr('id'));'>" + 
-	                    	"<table class='friends_item'><tr>" + 
-	         					"<td><img class='friends_item_picture' src='" + pic + "' alt='userphoto'/></td>" +
+		if (jQuery("div").filter(jQuery("#chat").find("div")[1]).attr("id") == id) {
+			var css_class = " me";
+		} else {
+			var css_class = "";
+		}
+		
+		to_insert = "<div class='friends_column_wrapper online" + css_class + "' id=" + jid + ">" + 
+	                    	"<table class='friends_item' id='" + id + "'><tr>" + 
+	         					"<td><img src='" + pic + "' class='friends_item_picture' alt='userphoto'/></td>" +
 	                        	"<td class='friends_item_name'>" + name + "</td>" + 
 	                        	"<td class='friends_item_status'>Online</td>" +
 	                    	"</tr></table>" + 
 	              		"</div>";
+	    
+	    if (jQuery('.online').length == 0 && jQuery('.offline').length == 0) {
+			jQuery("#roster")[0].textContent = "";
+		}          		
+	    
 		if (group_el.length > 0) {
 			var inserted = false;
 			group_el.each(function () {
@@ -1049,9 +1094,20 @@ var Client = {
 				// insert after last element of group
 				jQuery('.' + 'online').last().after(to_insert);
 			}
-		} else {
+		} else if (jQuery('.offline').length > 0) {
 			jQuery('.' + 'offline').first().before(to_insert);
+		} else {
+			jQuery("#roster").append(to_insert);
 		}
+		
+		// group chat tab
+		var group_chat_item = "<div class='friends_column_wrapper_classmates_me' id='classmates_'" + jid + "'>" + 
+					    	"<table class='friends_item'><tr>"+ 
+	         					"<td><img class='friends_item_picture' src=" + pic + " alt='userphoto'/></td>" + 
+	                        	"<td class='friends_item_name'>" + name + "</td>"
+                    		"</tr></table>" + 
+	              		"</div>";
+		jQuery("#friends_members").append(group_chat_item);
 	},
 	
 	check_membership: function (jid) {
@@ -1158,11 +1214,10 @@ jQuery(window).unload(function() {
 // connection
 jQuery(document).bind('connect', function (ev, data) {
 	// get value from cookies 		
-	var conn_sid = jQuery.cookie("conn_sid");
-	var conn_rid = jQuery.cookie("conn_rid");
-	var conn_jid = jQuery.cookie("conn_jid");
-	console.log("FROM COOKIE: ", conn_sid, conn_rid, conn_jid);
-	
+	//var conn_sid = jQuery.cookie("conn_sid");
+	//var conn_rid = jQuery.cookie("conn_rid");
+	//var conn_jid = jQuery.cookie("conn_jid");
+	//console.log("FROM COOKIE: ", conn_sid, conn_rid, conn_jid);
 
 	var conn = new Strophe.Connection("http://bosh.metajack.im:5280/xmpp-httpbind");
 	
@@ -1202,9 +1257,10 @@ jQuery(document).bind('connect', function (ev, data) {
 								var jid = data[0];
 								var name = data[1] + ' ' + data[2];
 								var pic = data[3];
-								Client.show_new_contact(jid, name, pic);
+								var id = data[4];
+								Client.show_new_contact(jid, name, pic, id);
 								
-								course_members_jids = data.slice(4, data.length);
+								course_members_jids = data.slice(5, data.length);
 								
 								jQuery(document).trigger('connected', [course_members_jids]);
 							}
@@ -1215,10 +1271,10 @@ jQuery(document).bind('connect', function (ev, data) {
 					});
 				} else {
 					// store connection into cookies for later use
-					jQuery.cookie("conn_sid", conn.sid, {expires: 365, path: '/'});
-					jQuery.cookie("conn_rid", conn.rid, {expires: 365, path: '/'});
-					jQuery.cookie("conn_jid", conn.jid, {expires: 365, path: '/'});
-					console.log("WROTE TO COOKIES: ", conn.sid, conn.rid, typeof(conn.jid), conn.jid);
+					//jQuery.cookie("conn_sid", conn.sid, {expires: 365, path: '/'});
+					//jQuery.cookie("conn_rid", conn.rid, {expires: 365, path: '/'});
+					//jQuery.cookie("conn_jid", conn.jid, {expires: 365, path: '/'});
+					//console.log("WROTE TO COOKIES: ", conn.sid, conn.rid, typeof(conn.jid), conn.jid);
 			
 					jQuery(document).trigger('connected', [course_members_jids]);
 				}
@@ -1233,8 +1289,8 @@ jQuery(document).bind('connect', function (ev, data) {
 		Client.connection = conn;
 		
 	} else {
-		console.log("GET FROM COOKIE: ", conn_sid, conn_rid, conn_jid);
-		conn.attach(conn_jid, conn_sid, parseInt(conn_rid) + 1);
+		//console.log("GET FROM COOKIE: ", conn_sid, conn_rid, conn_jid);
+		//conn.attach(conn_jid, conn_sid, parseInt(conn_rid) + 1);
 		
 		jQuery(document).trigger('connected');
 	}
@@ -1245,12 +1301,19 @@ jQuery(document).bind('connect', function (ev, data) {
 jQuery(document).bind('connected', function (event, course_members_jids) {
 	console.log("Connection established.");
 	
+	Client.my_full_jid = Client.connection.jid;
+	Client.connection.send($pres().c('show').t(Client.my_full_jid));
+	Client.last_presence_sent = +new Date;		
+	
     var iq_roster = $iq({type: 'get'}).c('query', {xmlns: 'jabber:iq:roster'});
     Client.connection.sendIQ(iq_roster, Client.on_roster);
-    Client.connection.addHandler(Client.on_presence, null, "presence");
+    //Client.connection.addHandler(Client.on_presence_subscribe, null, "presence", "subscribe");
+	//Client.connection.addHandler(Client.on_presence_subscribed, null, "presence", "subscribed");
+    Client.connection.addHandler(Client.on_presence, null, "presence", null);
     Client.connection.addHandler(Client.on_message, null, "message", "chat");
     Client.connection.addHandler(Client.on_public_message, null, "message", "groupchat");
-    Client.connection.addHandler(Client.on_muc_invite, null, "message", "normal");
+    Client.connection.addHandler(Client.on_muc_invite, null, "message", "normal");    
+    
     
     // send subscription request to all course members (on first login course_members_jids.length > 0)
     if (course_members_jids.length > 0) {
@@ -1276,14 +1339,16 @@ jQuery(document).bind('connected', function (event, course_members_jids) {
 		cache: false,
 		success: function (data) {
 			console.log("MUCS: ", data);
-			var mucs = data.split("  ");
-			var my_groupname = jQuery('.me').find('.friends_item_name')[0].textContent;
-			for (var i = 0; i < mucs.length; i++) {				
-				Client.mucs[mucs[i]] = { "joined":false, "participants":new Array(), "invites_to":new Array(), "nickname":my_groupname};
-				Client.connection.send($pres({
-					to: mucs[i] + "/" + Client.mucs[mucs[i]]["nickname"]
-				}).c('x', {xmlns: "http://jabber.org/protocol/muc"}));
+			if (data != "") {
+				var mucs = data.split("  ");
+				var my_groupname = jQuery('.me').find('.friends_item_name')[0].textContent;
+				for (var i = 0; i < mucs.length; i++) {				
+					Client.mucs[mucs[i]] = { "joined":false, "participants":new Array(), "invites_to":new Array(), "nickname":my_groupname};
+					Client.connection.send($pres({
+						to: mucs[i] + "/" + Client.mucs[mucs[i]]["nickname"]
+					}).c('x', {xmlns: "http://jabber.org/protocol/muc"}));
 				}
+			}
         },
         error: function (xhr, errorType, exception) {
             console.log("error: " + exception);
