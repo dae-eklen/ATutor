@@ -148,9 +148,9 @@ var Client = {
 			return true;
 		}
 		
-		//if ((from.search("@conference.talkr.im") == -1) && (from_bare != Strophe.getBareJidFromJid(Client.my_full_jid))) {
-			//console.log('from: ' + from + '  to: ' + jQuery(presence).attr('to') + '  ptype: ' + ptype + '  show: ' + jQuery(presence).find("show").text());
-		//}
+		if ((from.search("@conference.talkr.im") == -1) && (from_bare != Strophe.getBareJidFromJid(Client.my_full_jid))) {
+			console.log('from: ' + from + '  to: ' + jQuery(presence).attr('to') + '  ptype: ' + ptype + '  show: ' + jQuery(presence).find("show").text());
+		}
 
 		// do nothing if received data is not from course members (for 'chat')
 		if (Client.check_membership(from_bare) == false) {
@@ -709,10 +709,14 @@ var Client = {
 			
 			// change order
 			jQuery("#inbox_list")[0].removeChild(inbox_item);
-			jQuery("#inbox_list li").first().before(inbox_item);
+			jQuery("#inbox_list").prepend(inbox_item);
 		
 		} else {
 			// add new item
+			if (jQuery("#tab_inbox li").length == 0) {
+				jQuery("#inbox_notification").remove();
+			}
+			
 			if (from_bare.indexOf('@conference.talkr.im') == -1) {
 				// private
 				var img_src = jQuery("div").filter(document.getElementById(from_bare)).find("img").attr("src");
@@ -730,7 +734,7 @@ var Client = {
 		                       	"<td class='inbox_list_time'><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></td>" +
 		                "</tr></table>" +
 		            "</li>";
-		            
+
 		        jQuery("#inbox_list").prepend(inbox_item);
 		        
 			} else {
@@ -758,7 +762,7 @@ var Client = {
 			                "</tr></table>" +
 			            "</li>";
 			            
-			            jQuery("#inbox_list li").first().before(inbox_item);
+			            jQuery("#inbox_list").prepend(inbox_item);
 						
 			        },
 			        error: function (xhr, errorType, exception) {

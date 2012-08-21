@@ -1,6 +1,8 @@
 <?php
 if (!defined('AT_INCLUDE_PATH')) { exit; }
 
+require_once("mcrypt/Mcrypt.php");
+
 if (isset($_POST['my_id'])) {
 	$my_id = $_POST['my_id'];
 	
@@ -11,7 +13,7 @@ if (isset($_POST['my_id'])) {
 	}
 	$end = $offset + 10; // load 10 messages by ony ajax request
 	
-	$sql = "SELECT jid FROM AT_chat_members m WHERE m.member_id='".$my_id."'";
+	$sql = "SELECT jid FROM ".TABLE_PREFIX."chat_members m WHERE m.member_id='".$my_id."'";
 	$result = mysql_query($sql, $db);
 	if ($result) {
 		$row = mysql_fetch_assoc($result);
@@ -84,12 +86,22 @@ if (isset($_POST['my_id'])) {
 					$result = mysql_query($sql_from, $db);
 					$row_from = mysql_fetch_assoc($result);
 					
+					
+					$sql_pass = "SELECT * FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."members M USING (member_id) 
+									WHERE C.jid='".$row[from]."'";
+					$result_pass = mysql_query($sql_pass, $db);
+					$row_pass = mysql_fetch_assoc($result_pass);
+					
+					$mcrypt = new Anti_Mcrypt($row_pass[password]);
+					$msg = $mcrypt->decrypt($row[msg]);
+					
+					
 					$html .= "<li class='inbox_list_item inbox_private' id='inbox_".$inbox_id."'>".
 		         		"<table><tr>".
 		         				"<td><img class='picture' src='" .$_base_path. "get_profile_img.php?id=" .$row_from[member_id]. "' alt='userphoto'/></td>".
 		                       	"<td class='inbox_list_middle'>".
 		                        	"<label class='inbox_list_name'><a href='profile.php?id=" .$row_from[member_id]. "'>".$row_from[first_name]. ' ' .$row_from[last_name]."</a></label>".
-		                        	"<div class='inbox_list_info'>".urldecode($row[msg])."</div>".
+		                        	"<div class='inbox_list_info'>".urldecode($msg)."</div>".
 		                       	"</td>".
 		                        	
 		                       	"<td class='inbox_list_time'>".$row[timestamp]."</td>".
@@ -121,13 +133,23 @@ if (isset($_POST['my_id'])) {
 						$nr = $row_from[nr];
 					}
 					
+					
+					$sql_pass = "SELECT * FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."members M USING (member_id) 
+									WHERE C.jid='".$row[from]."'";
+					$result_pass = mysql_query($sql_pass, $db);
+					$row_pass = mysql_fetch_assoc($result_pass);
+					
+					$mcrypt = new Anti_Mcrypt($row_pass[password]);
+					$msg = $mcrypt->decrypt($row[msg]);
+					
+					
 					$html .= "<li class='inbox_list_item inbox_muc' id='inbox_".$row[to]."'>".
 		         		"<table><tr>".
 		         				"<td><img class='picture' src='".$_base_path."/images/home-acollab.png' alt='group_chat_image'/></td>".
 		                       	"<td class='inbox_list_middle'>".
 		                        	"<label class='inbox_list_name'>".$groupname."</label>".
 		                        	"<label class='inbox_list_nr'> (".$nr." members)</label>".
-		                        	"<div class='inbox_list_info'>".urldecode($row[msg])."</div>".
+		                        	"<div class='inbox_list_info'>".urldecode($msg)."</div>".
 		                       	"</td>".
 		                        	
 		                       	"<td class='inbox_list_time'>".$row[timestamp]."</td>".

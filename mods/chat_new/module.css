@@ -36,6 +36,7 @@ div.course div.shortcuts, a {text-align: left;}
 .inbox_list_name { font-size:1.1em; }
 .inbox_list_time {float:right; margin-right:10px; color:#555; margin:15px 25px 0 0;;}
 .inbox_list_item {cursor:pointer;}
+#inbox_notification {text-align: center;}
 
 
 /*===================================================CONVERSATIONS============================================================*/

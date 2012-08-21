@@ -32,7 +32,7 @@ function hide_div(){
 // ================= inbox list
 function load_inbox(){
 	var id = jQuery("div").filter(jQuery('#chat').find('div')[1]).attr('id');
-	var dataString = 'my_id=' + id;	
+	var dataString = 'my_id=' + id;
 	jQuery.ajax({
 		type: "POST",
 		url: "ATutor/mods/chat_new/ajax/get_inbox.php",
@@ -45,7 +45,15 @@ function load_inbox(){
 				data = data.replace(timestamp, "<nobr>" + moment(timestamp).format('DD.MM.YY') + "</nobr><br/><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr>");
 			});
 			
+			if (data != "" && jQuery("#tab_inbox li").length == 0) {
+				jQuery("#inbox_notification").remove();
+			}
+			
 			jQuery('#inbox_list').append(data);
+			
+			if (data == "" && jQuery("#tab_inbox li").length == 0) {
+				jQuery("#tab_inbox").prepend("<div id='inbox_notification'>You don't have previous conversations yet. Click on item from side menu to start chatting.</div>");
+			}
 			
 			// binding function that will retrieve older messages on scrollTop
 			jQuery('#inbox_list').scroll(function(){
