@@ -32,5 +32,5 @@ CREATE TABLE `chat_user_mucs` (
 ) DEFAULT CHARSET=utf8;
 
 
-INSERT INTO `language_text` VALUES ('en', '_module','chat_2','Chat 2.0',NOW(),'');
-INSERT INTO `language_text` VALUES ('en', '_module','chat_2_text','New XMPP-based chat for ATutor.',NOW(),'');
+INSERT INTO `language_text` VALUES ('en', '_module','chat_new','XMPP Chat',NOW(),'');
+INSERT INTO `language_text` VALUES ('en', '_module','chat_new_text','New XMPP-based chat for ATutor.',NOW(),'');

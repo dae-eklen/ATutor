@@ -228,22 +228,19 @@ function replace_friend(clicked, to){
 }
 
 function refreshForm(){
-	var friendsMembers = document.getElementById("friends_members");
-	if (friendsMembers){
-		document.getElementById("nr_of_members").innerHTML = friendsMembers.childNodes.length - 2;
+	document.getElementById("nr_of_members").textContent = jQuery("#friends_members").find(".friends_column_wrapper_classmates").length + 1;
 		
-		if (friendsMembers.childNodes.length - 2 <= 2){
-			document.getElementById("groupname").disabled = true;
+	if (jQuery("#friends_members").find(".friends_column_wrapper_classmates").length <= 1){
+		document.getElementById("groupname").disabled = true;
+		document.getElementById("friends_selected_bnt").disabled = true;
+		document.getElementById("friends_selected_label").style.color = '#555';
+	}
+	else if (jQuery("#friends_members").find(".friends_column_wrapper_classmates").length >= 2){
+		document.getElementById("groupname").disabled = false;
+		if (validateGroupname() == false){
 			document.getElementById("friends_selected_bnt").disabled = true;
-			document.getElementById("friends_selected_label").style.color = '#555';
 		}
-		else if (friendsMembers.childNodes.length - 2 >= 3){
-			document.getElementById("groupname").disabled = false;
-			if (validateGroupname() == false){
-				document.getElementById("friends_selected_bnt").disabled = true;
-			}
-		}
-	}	
+	}
 }
 
 function validateGroupname(){
@@ -597,7 +594,7 @@ function connect(jid, pass) {
 	document.body.style.cursor = "wait";
 	if (jid==null && pass==null){
 		jQuery(document).trigger('connect', {
-			jid: jQuery('#welcome_form_jid').val() + "@" + jQuery('#welcome_form_select').val(),
+			jid: jQuery('#welcome_form_jid').val() + "@talkr.im",
 			password: jQuery('#welcome_form_pass').val(),
 			id: jQuery('#welcome_form_member_id').val()
 		});
@@ -607,7 +604,7 @@ function connect(jid, pass) {
 			password: pass
 		});
 	} 
-	//jQuery('#welcome_form_pass').val('');
+	jQuery('#welcome_form_pass').val('');
 }
 
 

@@ -148,9 +148,9 @@ var Client = {
 			return true;
 		}
 		
-		if ((from.search("@conference.talkr.im") == -1) && (from_bare != Strophe.getBareJidFromJid(Client.my_full_jid))) {
-			console.log('from: ' + from + '  to: ' + jQuery(presence).attr('to') + '  ptype: ' + ptype + '  show: ' + jQuery(presence).find("show").text());
-		}
+		// if ((from.search("@conference.talkr.im") == -1) && (from_bare != Strophe.getBareJidFromJid(Client.my_full_jid))) {
+			// console.log('from: ' + from + '  to: ' + jQuery(presence).attr('to') + '  ptype: ' + ptype + '  show: ' + jQuery(presence).find("show").text());
+		// }
 
 		// do nothing if received data is not from course members (for 'chat')
 		if (Client.check_membership(from_bare) == false) {
@@ -689,7 +689,7 @@ var Client = {
 			cache: false,
 			success: function (data) {			
 				if (document.getElementById(jQuery(data).attr("id")) == null) {
-					jQuery("#roster").append(data);
+					jQuery("#roster").prepend(data);
 					//Client.replace_contact(document.getElementById(document.getElementById(jQuery(data).attr("id"))), jQuery(data).hasClass("online"));
 				}				
 			},

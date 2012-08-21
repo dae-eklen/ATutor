@@ -32,7 +32,7 @@ while ($row = mysql_fetch_assoc($result)) {
 
 ob_start();
 ?>
-<link rel="stylesheet" href="<?php echo $_base_path; ?>/mods/chat_new/side_menu.css" type="text/css" />
+<link rel="stylesheet" href="<?php echo $_base_path; ?>/mods/chat_new/includes/side_menu.css" type="text/css" />
 	<div id="roster">
 		<?php
 		if (count($course_participants_online) == 0 && count($course_participants_offline) == 0) {

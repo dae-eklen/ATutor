@@ -1,6 +1,8 @@
 <?php
 if (!defined('AT_INCLUDE_PATH')) { exit; }
 
+require_once("mcrypt/Mcrypt.php");
+
 // new entry in chat_members table
 if (isset($_POST['id']) && isset($_POST['jid']) && isset($_POST['pass']) && isset($_POST['course_id'])){
 	$id = $_POST['id'];
@@ -10,6 +12,14 @@ if (isset($_POST['id']) && isset($_POST['jid']) && isset($_POST['pass']) && isse
 	$sql = "SELECT * FROM ".TABLE_PREFIX."chat_members WHERE member_id=$id";
 	$result = mysql_query($sql, $db);
 	if (count(mysql_fetch_assoc($result)) == 1){
+		
+		$sql_pass = "SELECT * FROM ".TABLE_PREFIX."members WHERE member_id='".$id."'";
+		$result_pass = mysql_query($sql_pass, $db);
+		$row_pass = mysql_fetch_assoc($result_pass);
+					
+		$mcrypt = new Anti_Mcrypt($row_pass[password]);
+		$pass = $mcrypt->encrypt($pass);
+		
 		$sql = "INSERT INTO ".TABLE_PREFIX."chat_members (member_id, jid, password) VALUES ('$id', '$jid', '$pass')";
 		$resp = mysql_query($sql,$db);
 		if ($resp){
@@ -45,7 +55,14 @@ if (isset($_POST['id'])){
 	if (count($row) == 1){
 		echo 0;
 	} else {
-		echo $row['jid']. ' ' .$row['password'];
+		$sql_pass = "SELECT * FROM ".TABLE_PREFIX."members WHERE member_id='".$id."'";
+		$result_pass = mysql_query($sql_pass, $db);
+		$row_pass = mysql_fetch_assoc($result_pass);
+					
+		$mcrypt = new Anti_Mcrypt($row_pass[password]);
+		$pass = $mcrypt->decrypt($row['password']);
+		
+		echo $row['jid']. ' ' .$pass;
 	}
 	exit();
 }

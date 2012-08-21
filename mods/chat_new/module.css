@@ -95,3 +95,6 @@ div.course div.shortcuts, a {text-align: left;}
 #settings_save {margin:10px 0 !important;}
 .settings_category a:hover, .settings_category a:focus {background-color:transparent;}
 .settings_details {cursor:pointer; margin-bottom:-3px;}
+#settings_save {width: auto;}
+
+

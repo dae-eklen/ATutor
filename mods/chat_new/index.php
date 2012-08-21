@@ -10,7 +10,8 @@ $_custom_head .= '<script type="text/javascript" src="https://ajax.googleapis.co
 		<script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/xmpp_console.js"></script>
 		<script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/interface.js"></script>
 				
-		<script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/strophe&flXHR/strophe.js"></script>	
+		<script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/strophe&flXHR/strophe_sha1.js"></script>
+		<script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/strophe&flXHR/sha1.js"></script>	
 	    <script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/strophe&flXHR/strophe.muc.js"></script>
 	    <script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/strophe&flXHR/flXHR.js"></script>
 	    <script type="text/javascript" src="'.$_base_path.'mods/chat_new/js/libraries/strophe&flXHR/strophe.flxhr.js"></script>	   
@@ -21,61 +22,26 @@ $_custom_css = $_base_path.'mods/chat_new/module.css'; // use a custom styleshee
 require (AT_INCLUDE_PATH.'header.inc.php');
 
 
-
-//require("../chat_new/includes/mcrypt/Mcrypt.php");
-//require("includes/mcrypt/Mcrypt.php");
-
-//	$from = "dae-eklen-test2@talkr.im";
-//	$to = "dae-eklen-test@talkr.im";
-//	$msg = "11";
-//	$timestamp = "1345541873326";
-//	
-//	$sql_from = "SELECT * FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."members M USING (member_id) 
-//					WHERE C.jid='".$from."'";
-//	$result_from = mysql_query($sql_from, $db);
-//	$row_from = mysql_fetch_assoc($result_from);
-//	debug($row_from[password], "$row_from[password]");
-//	$mcrypt = new Anti_Mcrypt($row_from[password]);
-//	$msg = $mcrypt->encrypt($msg);	
-//	
-//	if ($_POST['groupchat'] == 0){
-//		// chat message
-//		$sql = "INSERT INTO `".TABLE_PREFIX."chat_messages` (`from`, `to`, `msg`, `timestamp`) VALUES ('$from', '$to', '$msg', '$timestamp')";
-//		$resp = mysql_query($sql,$db);
-//		if ($resp){
-//			echo 1;
-//		}
-//		
-//	} else if ($_POST['groupchat'] == 1) {
-//		// muc message	
-//		$sql = "INSERT INTO `".TABLE_PREFIX."chat_muc_messages` (`from`, `to`, `msg`, `timestamp`) VALUES ('$from', '$to', '$msg', '$timestamp')";
-//		$resp = mysql_query($sql,$db);
-//		if ($resp){
-//			echo 1;
-//		}
-//	}
-
-
-
-
 ?>
 
 	<div id="welcome" class="fl-container-flex90">
-		Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		Welcome to the new version of chat!<br/><br/>
+		
+		In order to login you need a free account on <a href="https://www.talkr.im/">talkr.im</a> server that is used by the chat. 
+		By logging in you agree with the fact that <a href="https://www.talkr.im/">talkr.im</a> hosts the messages.<br/><br/>
+		
+		It is highly recommended that you use the registered account only within the ATutor chat client to avoid loss of data or other undesirable consequences.<br/>
+		
+		Please see <a href="<?php echo $_base_path; ?>mods/chat_new/ATutor_XMPP_Chat_READ_ME.pdf" target="_blank">the helping document</a> for more details.
+		
 		<table id="welcome_form">
 			<tr>
 				<td><label>Nickname:</label></td>
-		        <td><input class="welcome_form_input" id="welcome_form_jid" maxlength="100" type="text" name="jid"/></td>
+		        <td><input class="welcome_form_input" id="welcome_form_jid" maxlength="100" type="text" name="jid"/> @ talkr.im</td>
 	        </tr>
-	        <tr>
-		        <td><label>Server:</label></td>
-		        <td><select id="welcome_form_select">
-				  <option value="talkr.im">talkr.im</option>
-				</select></td>
-			</tr>
 			<tr>
 				<td><label>Password:</label></td>
-		        <td><input class="welcome_form_input" id="welcome_form_pass" maxlength="100" type="text" type="password" name="pass"/></td>
+		        <td><input class="welcome_form_input" id="welcome_form_pass" maxlength="100" type="password" name="pass"/></td>
 	        </tr>
 	        <tr>
 				<td><input type="hidden" name="member_id" id="welcome_form_member_id" value="<?php echo $_SESSION['member_id']; ?>"/></td>
@@ -95,7 +61,7 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 		        <li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active" role="presentation"><a href="#tab_inbox">Inbox list</a></li>
 		        <li class="ui-state-default ui-corner-top"><a href="#tab_conversations">Conversations</a></li>
 		        <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tab_friends">Group chat</a></li>
-		        <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tab_settings">Settings</a></li>
+		        <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tab_settings">Settings and help</a></li>
 		    </ul>		  
 		    <div id="tab_inbox">
 		    <?php require ('includes/inbox_list.inc.php'); ?>
