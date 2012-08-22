@@ -7,6 +7,7 @@
 #chat {min-width: 600px; max-width:1200px;}
 .ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {font-weight: bold;}
 #log {color: #f00; padding-left:20px;}
+#buttonbar {width: 1420px;}
 
 
 /*===================================================COMMON==================================================================*/

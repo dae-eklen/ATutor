@@ -63,7 +63,7 @@ while ($row = mysql_fetch_assoc($result)) {
                     <div id="friends_selected">
 	                    Members selected: <span id="nr_of_members">1</span><br/>
 	                    <div id="friends_selected_label">Please specify group name:</div>
-	                    <input id="groupname"  maxlength="100" type="text" onkeypress="refreshForm();"/><br/>
+	                    <input id="groupname"  maxlength="100" type="text" onkeypress="Interface.refresh_form();"/><br/>
 	                    <input id="friends_selected_bnt" type="button" label="submit" value="Create chat"/>
                     </div>
                 </td>

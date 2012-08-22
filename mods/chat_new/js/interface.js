@@ -3,6 +3,8 @@ var Interface = {
 	// hides #chat div if user enters for the first time and #welcome div if the DB entry exists;
 	// called each time on index page load
 	hide_div: function (){
+		jQuery("#dialog_message").hide();
+		
 		var dataString = 'id=' + jQuery("div").filter(jQuery('#chat').find('div')[1]).attr('id');
 		jQuery.ajax({
 			type: "POST",
@@ -429,7 +431,7 @@ jQuery('.conversations_textarea').live('keypress', function (ev) {
 	 	
 	 	Client.connection.send(message);
 	 	
-	 	Client.update_inbox(Strophe.getBareJidFromJid(jid), body, timestamp);
+	 	Client.update_inbox(Strophe.getBareJidFromJid(jid), body, timestamp, true);
 	 	
 	} else {
 		var composing = jQuery(this).parent().parent().parent().parent().parent().data('composing');
@@ -500,7 +502,7 @@ jQuery('.conversations_send').live('click', function () {
  	
  	Client.connection.send(message);
  	
- 	Client.update_inbox(Strophe.getBareJidFromJid(jid), body, timestamp);
+ 	Client.update_inbox(Strophe.getBareJidFromJid(jid), body, timestamp, true);
  	
 });
 	

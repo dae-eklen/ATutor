@@ -108,7 +108,7 @@ var Client = {
 			Client.subscribed.push(from_bare);
 				
 		} else if (jQuery.inArray(from_bare, Client.subscribe) == -1 && jQuery.inArray(from_bare, Client.subscribed) == -1) {
-			// i initiated
+			// i initiated 
 			Client.subscribed.push(from_bare);
 		}
 			
@@ -483,9 +483,6 @@ var Client = {
 			}).c('x', {xmlns: "http://jabber.org/protocol/muc"}));
 			
 			Client.mucs[from_room] = { "joined":false, "participants":new Array(), "invites_to":new Array(), "nickname":nick};
-			
-			// add tab
-			Interface.open_conversation_tab(from_room, Strophe.getNodeFromJid(from_room), true);
 		}
 		
 		return true;
@@ -561,7 +558,7 @@ var Client = {
 
 			jQuery("div").filter(document.getElementById(from_bare)).data('jid', from);
 			
-			Client.update_inbox(from_bare, body, timestamp);
+			Client.update_inbox(from_bare, body, timestamp, false);
 		}
 		
 		return true;
@@ -634,7 +631,7 @@ var Client = {
 					}    
 				}
 				
-				Client.update_inbox(room, body, +new Date);
+				Client.update_inbox(room, body, +new Date, false);
 					
 				
 			} else if (Client.mucs[room]["joined"] == true) {
@@ -687,7 +684,8 @@ var Client = {
 	// from_bare: jid of sender in bare form
 	// body: message text itself
 	// timestamp: time stamp when the message was received
-	update_inbox: function (from_bare, body, timestamp) {
+	// sender_me: true if i send the msg, false otherwise
+	update_inbox: function (from_bare, body, timestamp, sender_me) {
 		var inbox_item = document.getElementById("inbox_" + from_bare);
 		var jid_id = Client.jid_to_id(from_bare);
 	
@@ -732,6 +730,7 @@ var Client = {
 					type: "POST",
 					url: "ATutor/mods/chat_new/ajax/get_inbox.php",
 					data: dataString,
+					async: false,
 					cache: false,
 					success: function (returned) {
 						var data = returned.split('  ');
@@ -749,7 +748,7 @@ var Client = {
 			                       	"<td class='inbox_list_time'>" + moment(timestamp).format('HH:mm:ss') + "</td>" +
 			                "</tr></table>" +
 			            "</li>";
-			            
+			        
 			            jQuery("#inbox_list").prepend(inbox_item);
 						
 			        },
@@ -772,7 +771,7 @@ var Client = {
 			
 			// update inbox tab text
 		    var nr = jQuery("#inbox_list li").filter(".inbox_list_item_new").length;
-			if (nr == 0) {
+			if (nr == 0 && !sender_me) {
 				jQuery('a[href="#tab_inbox"]')[0].textContent = "Inbox list (1)";
 			} else {				
 				var found = false;
@@ -790,7 +789,6 @@ var Client = {
 					jQuery('a[href="#tab_inbox"]')[0].textContent = jQuery('a[href^="#tab_inbox"]')[0].textContent.slice(0, jQuery('a[href="#tab_inbox"]')[0].textContent.length - len) + "(" + nr + ")";
 				}
 			}
-			
 			jQuery("li").filter(document.getElementById("inbox_" + from_bare)).addClass("inbox_list_item_new");
 		}
 		
@@ -1345,7 +1343,6 @@ jQuery(document).bind('connected', function (event, course_members_jids) {
     // send subscription request to all course members (on first login course_members_jids.length > 0)
     if (course_members_jids.length > 0) {
     	for (i = 0; i < course_members_jids.length; ++i) {
-		    console.log("will send subscription request to " + course_members_jids[i]);
 			Client.connection.send($pres({
 				to: course_members_jids[i],
 				"type": "subscribe"}));
