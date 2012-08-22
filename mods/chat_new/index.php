@@ -45,7 +45,7 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 	        </tr>
 	        <tr>
 				<td><input type="hidden" name="member_id" id="welcome_form_member_id" value="<?php echo $_SESSION['member_id']; ?>"/></td>
-		        <td><input id="welcome_form_login" type="button" value="Log In" onclick="connect(null, null);"/></td>
+		        <td><input id="welcome_form_login" type="button" value="Log In" onclick="Interface.connect(null, null);"/></td>
 	        </tr>        
 		</table>
 		<div id='log'>
@@ -82,6 +82,15 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 	</div><!--end chat-->
 
 
+	<div id="dialog_message" title="Connecting...">
+		<p>
+			<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>
+			The XMPP Chat is currently connecting to the server.
+			This can take several seconds, please wait.
+		</p>
+	</div>
+	
+
 	<!--Peek XMPP console (comment to hide) -->
 	<h4>Peek XMPP console</h4>
 	<div id="peek">
@@ -103,23 +112,23 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 	    jQuery('#subtabs').tabs({
 			select: function(event, ui){
 		        var jid_id = ui.tab.hash;
-		        on_select_subtab(jid_id.slice(6, jid_id.length));
+		        Interface.on_select_subtab(jid_id.slice(6, jid_id.length));
 			}
 		});
 		
 		jQuery('#tabs').tabs({
 			select: function(event, ui){
 				if (ui.tab.hash == "#tab_conversations") {
-					on_select_conversation_tab();
+					Interface.on_select_conversation_tab();
 				}
 			}
 		});
 		
 	    
-	    refreshForm();
-	    hide_div();
+	    Interface.refresh_form();
+	    Interface.hide_div();
 	    
-	    load_inbox();
+	    Interface.load_inbox();
 	    
 //	     window.onbeforeunload = function(event)
 //    {
