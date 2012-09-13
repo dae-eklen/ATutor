@@ -61,7 +61,7 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 		        <li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active" role="presentation"><a href="#tab_inbox">Inbox list</a></li>
 		        <li class="ui-state-default ui-corner-top"><a href="#tab_conversations">Conversations</a></li>
 		        <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tab_friends">Group chat</a></li>
-		        <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tab_settings">Settings and help</a></li>
+		        <li class="ui-state-default ui-corner-top" role="presentation"><a href="#tab_settings">Help</a></li>
 		    </ul>		  
 		    <div id="tab_inbox">
 		    <?php require ('includes/inbox_list.inc.php'); ?>
@@ -80,6 +80,9 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 			</div>		
 		</div>  
 	</div><!--end chat-->
+	
+	<ul id="xmpp-logs" aria-live="polite" aria-atomic="false" style="list-style: none; list-style: none; font-size: 0.1em; color: white;">
+	</ul>
 
 
 	<div id="dialog_message" title="Connecting...">
@@ -92,7 +95,7 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 	
 
 	<!--Peek XMPP console (comment to hide) -->
-	<h4>Peek XMPP console</h4>
+	<!--<h4>Peek XMPP console</h4>
 	<div id="peek">
 		<div id='console'></div>
 		<textarea id='console_input' class='disabled' disabled='disabled'></textarea>
@@ -101,8 +104,9 @@ require (AT_INCLUDE_PATH.'header.inc.php');
 			<input id='send_button' type='button' value='Send Data' disabled='disabled' class='button' onclick="console_send();">
 			<input id='disconnect_button' type='button' value='Disconnect' disabled='disabled' class='button' onclick="console_disconnect();">
 		</div>
-	</div>
+	</div>-->
 	<!--end Peek XMPP console-->
+	
 	
 	
 	

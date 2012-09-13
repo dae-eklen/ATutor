@@ -25,6 +25,7 @@ var Client = {
 			var jid = jQuery(this).attr('jid');
 			if (jid != '[object object]') {
 				Client.roster.push(jid);
+				Client.roster[jid] = 'offline';
 			}
 		});
 		console.log('roster: ' + Client.roster);
@@ -82,6 +83,7 @@ var Client = {
 			
 			// added to roster
 			Client.roster.push(from_bare);
+			Client.roster[from_bare] = 'online';
 			Client.get_new_contact_data(from_bare);
 			Client.connection.send($pres().c('show').t(Client.my_full_jid));
 			Client.last_presence_sent = +new Date;
@@ -124,6 +126,7 @@ var Client = {
 			
 			// added to roster
 			Client.roster.push(from_bare);
+			Client.roster[from_bare] = 'online';
 			Client.get_new_contact_data(from_bare);
 			Client.connection.send($pres().c('show').t(Client.my_full_jid));
 			Client.last_presence_sent = +new Date;
@@ -688,6 +691,18 @@ var Client = {
 	update_inbox: function (from_bare, body, timestamp, sender_me) {
 		var inbox_item = document.getElementById("inbox_" + from_bare);
 		var jid_id = Client.jid_to_id(from_bare);
+		
+		if (from_bare.indexOf('@conference.talkr.im') == -1) {
+			// private
+			var name = jQuery("div").filter(document.getElementById(from_bare)).find(".friends_item_name")[0].textContent;
+			
+			var update = "<li>" + moment(timestamp).format('HH:mm:ss') + ": New private message from " + name + ": " + body + "</li>";
+			Interface.wai_aria_log(update);
+		} else {
+			// muc
+			var update = "<li>" + moment(timestamp).format('HH:mm:ss') + ": New message in group chat " + Strophe.getNodeFromJid(from_bare) + ": " + body + "</li>";
+			Interface.wai_aria_log(update);
+		}
 	
 		if (inbox_item != null) {
 			jQuery("li").filter(inbox_item).find(".inbox_list_info").replaceWith("<div class='inbox_list_info'>" + body + "</div>");
@@ -706,10 +721,11 @@ var Client = {
 			if (from_bare.indexOf('@conference.talkr.im') == -1) {
 				// private
 				var img_src = jQuery("div").filter(document.getElementById(from_bare)).find("img").attr("src");
-				var name = jQuery("div").filter(document.getElementById(from_bare)).find(".friends_item_name")[0].textContent;
-				var id = jQuery("div").filter(document.getElementById(from_bare)).find("table").attr("id");
 				
-				var inbox_item = "<li class='inbox_list_item inbox_private' id='inbox_" + from_bare + "'>" +
+				var id = jQuery("div").filter(document.getElementById(from_bare)).find("table").attr("id");
+				var inbox_item = "<li class='inbox_list_item inbox_private' id='inbox_" + from_bare + "' role='listitem' title='Chat with " + name + "' tabindex='0'" + 
+					"aria-controls='inbox_list' onblur='jQuery(this)[0].showFocus = false;' onfocus='jQuery(this)[0].showFocus = true;'" + 
+					"onkeydown='return Interface.optionKeyEvent_inbox_list_item(event);' onkeypress='return Interface.optionKeyEvent_inbox_list_item(event);'>" +
 		         		"<table><tr>" +
 		         				"<td><img class='picture' src='" + img_src + "' alt='userphoto'/></td>" +
 		                       	"<td class='inbox_list_middle'>" +
@@ -720,7 +736,7 @@ var Client = {
 		                       	"<td class='inbox_list_time'><nobr>" + moment(timestamp).format('HH:mm:ss') + "</nobr></td>" +
 		                "</tr></table>" +
 		            "</li>";
-
+		        
 		        jQuery("#inbox_list").prepend(inbox_item);
 		        
 			} else {
@@ -736,7 +752,9 @@ var Client = {
 						var data = returned.split('  ');
 						var nr = data[0];
 						var base_path = data[1];
-						var inbox_item = "<li class='inbox_list_item inbox_muc' id='inbox_" + from_bare + "'>" +
+						var inbox_item = "<li class='inbox_list_item inbox_muc' id='inbox_" + from_bare + "' role='listitem' title='Group chat " + Strophe.getNodeFromJid(from_bare) + "' tabindex='0'" +
+							"aria-controls='inbox_list' onblur='jQuery(this)[0].showFocus = false;' onfocus='jQuery(this)[0].showFocus = true;'" +
+							"onkeydown='return Interface.optionKeyEvent_inbox_list_item(event);' onkeypress='return Interface.optionKeyEvent_inbox_list_item(event);'>" +
 			         		"<table><tr>" +
 			         				"<td><img class='picture' src='" + base_path + "/images/home-acollab.png' alt='group_chat_image'/></td>" +
 			                       	"<td class='inbox_list_middle'>" +
@@ -748,7 +766,7 @@ var Client = {
 			                       	"<td class='inbox_list_time'>" + moment(timestamp).format('HH:mm:ss') + "</td>" +
 			                "</tr></table>" +
 			            "</li>";
-			        
+			            
 			            jQuery("#inbox_list").prepend(inbox_item);
 						
 			        },
@@ -1020,7 +1038,7 @@ var Client = {
 	// elem_roster: html element of element to change status
 	// online: true if joined, false if left
 	replace_contact: function (elem_roster, online) {
-		if (online == true){
+		if (online == true){			
 			group_el_roster = jQuery('#roster').find('.online');
 			group = 'online';
 			group_other = 'offline';
@@ -1029,6 +1047,12 @@ var Client = {
 				elem_roster.className = "friends_column_wrapper online me";
 			} else {
 				elem_roster.className = "friends_column_wrapper online";
+				jQuery(elem_roster).attr('title', jQuery(elem_roster).find('.friends_item_name').text() + " - Online");
+				
+				if (Client.roster[jQuery(elem_roster).attr('id')] != 'online') {
+					Interface.wai_aria_log(moment(+new Date).format('HH:mm:ss') + ": Status update: " + jQuery(elem_roster).find(".friends_item_name").text() + " is online");
+					Client.roster[jQuery(elem_roster).attr('id')] = 'online';
+				}
 			}
 			jQuery("div").filter(elem_roster).find("td")[2].textContent = "Online";
 		} else {
@@ -1040,6 +1064,12 @@ var Client = {
 				elem_roster.className = "friends_column_wrapper offline me";
 			} else {
 				elem_roster.className = "friends_column_wrapper offline";
+				jQuery(elem_roster).attr('title', jQuery(elem_roster).find('.friends_item_name').text() + " - Offline");
+				
+				if (Client.roster[jQuery(elem_roster).attr('id')] != 'offline') {
+					Interface.wai_aria_log(moment(+new Date).format('HH:mm:ss') + ": Status update: " + jQuery(elem_roster).find(".friends_item_name").text() + " is offline");
+					Client.roster[jQuery(elem_roster).attr('id')] = 'offline';
+				}
 			}			
 			jQuery("div").filter(elem_roster).find("td")[2].textContent = "";
 		}
@@ -1325,6 +1355,8 @@ jQuery(document).bind('connect', function (ev, data) {
 // XMPP statuses
 jQuery(document).bind('connected', function (event, course_members_jids) {
 	console.log("Connection established.");
+	
+	Interface.wai_aria_log(moment(+new Date).format('HH:mm:ss') + ": Connection established");
 	
 	Client.my_full_jid = Client.connection.jid;
 	Client.connection.send($pres().c('show').t(Client.my_full_jid));

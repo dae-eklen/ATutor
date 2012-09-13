@@ -1,5 +1,5 @@
 
 		<div id="subtabs">
-			<ul>
+			<ul aria-live="assertive" aria-atomic="false">
 			</ul>			
 		</div>        		

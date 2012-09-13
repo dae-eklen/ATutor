@@ -72,7 +72,6 @@ if (isset($_POST['my_id'])) {
 			$result = mysql_query($sql, $db);
 			if ($result) {
 				while($row = mysql_fetch_assoc($result)){
-	//				debug($row, "pricate contact");
 					if ($row[to] == $my_jid) {
 						$jid = $row[from];
 						$inbox_id = $row[from];
@@ -96,7 +95,8 @@ if (isset($_POST['my_id'])) {
 					$msg = $mcrypt->decrypt($row[msg]);
 					
 					
-					$html .= "<li class='inbox_list_item inbox_private' id='inbox_".$inbox_id."'>".
+					$html .= "<li class='inbox_list_item inbox_private' id='inbox_".$inbox_id."' role='listitem' title='Chat with ".$row_from[first_name]. ' ' .$row_from[last_name]."'  tabindex='0' aria-controls='inbox_list' onblur='jQuery(this)[0].showFocus = false;' onfocus='jQuery(this)[0].showFocus = true;' onkeydown='return Interface.optionKeyEvent_inbox_list_item(event);' onkeypress='return Interface.optionKeyEvent_inbox_list_item(event);'>".
+					
 		         		"<table><tr>".
 		         				"<td><img class='picture' src='" .$_base_path. "get_profile_img.php?id=" .$row_from[member_id]. "' alt='userphoto'/></td>".
 		                       	"<td class='inbox_list_middle'>".
@@ -119,9 +119,7 @@ if (isset($_POST['my_id'])) {
 			";
 			$result = mysql_query($sql, $db);
 			if ($result) {
-				while($row = mysql_fetch_assoc($result)){
-	//				debug($row, "muc");
-	
+				while($row = mysql_fetch_assoc($result)){	
 					$groupname = substr($row[to], 0, strlen($row[to]) - strlen('@conference.talkr.im'));
 					
 					$sql_from = "SELECT COUNT(*) as nr FROM ".TABLE_PREFIX."chat_members C INNER JOIN ".TABLE_PREFIX."members M USING (member_id)
@@ -143,7 +141,8 @@ if (isset($_POST['my_id'])) {
 					$msg = $mcrypt->decrypt($row[msg]);
 					
 					
-					$html .= "<li class='inbox_list_item inbox_muc' id='inbox_".$row[to]."'>".
+					$html .= "<li class='inbox_list_item inbox_muc' id='inbox_".$row[to]."' role='listitem' title='Group chat ".$groupname."' tabindex='0' aria-controls='inbox_list' onblur='jQuery(this)[0].showFocus = false;' onfocus='jQuery(this)[0].showFocus = true;' onkeydown='return Interface.optionKeyEvent_inbox_list_item(event);' onkeypress='return Interface.optionKeyEvent_inbox_list_item(event);'>".
+						
 		         		"<table><tr>".
 		         				"<td><img class='picture' src='".$_base_path."/images/home-acollab.png' alt='group_chat_image'/></td>".
 		                       	"<td class='inbox_list_middle'>".

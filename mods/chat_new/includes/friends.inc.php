@@ -17,7 +17,7 @@ while ($row = mysql_fetch_assoc($result)) {
         	<table><tr>
         		<td class="friends_column fl-container-flex35">
                     <h2>Classmates</h2>
-                    <div id="friends_list">
+                    <div id="friends_list" aria-live="polite" aria-atomic="false">
 <?php
 		if (count($course_participants) == 0) {
 			?> 
@@ -34,7 +34,12 @@ while ($row = mysql_fetch_assoc($result)) {
 	              		</div>";
 				} else {
 					?>
-					<div class="friends_column_wrapper_classmates" id="classmates_<?php echo $participant[0]; ?>">
+					<div class="friends_column_wrapper_classmates" role="listitem" title="<?php echo $participant[2].' '.$participant[3]; ?> - not member" id="classmates_<?php echo $participant[0]; ?>"
+						onkeydown="return Interface.optionKeyEvent_friends_column_wrapper(event);" tabindex="0" aria-controls="roster"
+					    onkeypress="return Interface.optionKeyEvent_friends_column_wrapper(event);"
+					    onblur="jQuery(this)[0].showFocus = false;"
+					    onfocus="jQuery(this)[0].showFocus = true;">
+										
 					    	<table class="friends_item"><tr>
 	         					<td><img class="friends_item_picture" src="<?php echo $_base_path; ?>get_profile_img.php?id=<?php echo $participant[1]; ?>" alt="userphoto"/></td>
 	                        	<td class="friends_item_name"><?php echo $participant[2].' '.$participant[3]; ?></td>

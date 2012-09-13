@@ -33,7 +33,7 @@ while ($row = mysql_fetch_assoc($result)) {
 ob_start();
 ?>
 <link rel="stylesheet" href="<?php echo $_base_path; ?>/mods/chat_new/includes/side_menu.css" type="text/css" />
-	<div id="roster">
+	<div id="roster" aria-label="XMPP Chat contact list">
 		<?php
 		if (count($course_participants_online) == 0 && count($course_participants_offline) == 0) {
 			?> 
@@ -44,11 +44,18 @@ ob_start();
 			foreach($course_participants_online as $participant){
 				if ($participant[1] == $_SESSION[member_id]){
 					?>
-					<div class="friends_column_wrapper online me" id="<?php echo $participant[0]; ?>">
+					<div class="friends_column_wrapper online me" role="listitem" title="<?php echo $participant[2].' '.$participant[3]; ?> - Me" id="<?php echo $participant[0]; ?>"
+						tabindex="0"
+					    onblur="jQuery(this)[0].showFocus = false;"
+					    onfocus="jQuery(this)[0].showFocus = true;">
 					<?php 
 				} else {
 					?>
-					<div class="friends_column_wrapper online" id="<?php echo $participant[0]; ?>">
+					<div class="friends_column_wrapper online" role="listitem" title="<?php echo $participant[2].' '.$participant[3]; ?> - Online" id="<?php echo $participant[0]; ?>" 
+						onkeydown="return Interface.optionKeyEvent_friends_column_wrapper(event);" tabindex="0" aria-controls="roster"
+					    onkeypress="return Interface.optionKeyEvent_friends_column_wrapper(event);"
+					    onblur="jQuery(this)[0].showFocus = false;"
+					    onfocus="jQuery(this)[0].showFocus = true;">
 					<?php
 				}
 				?>
@@ -64,7 +71,11 @@ ob_start();
 		}
 		if (count($course_participants_offline) != 0) {			
 			foreach($course_participants_offline as $participant){
-				?><div class="friends_column_wrapper offline" id="<?php echo $participant[0]; ?>">
+				?><div class="friends_column_wrapper offline" role="listitem" title="<?php echo $participant[2].' '.$participant[3]; ?> - Offline" id="<?php echo $participant[0]; ?>"
+						onkeydown="return Interface.optionKeyEvent_friends_column_wrapper(event);" tabindex="0" aria-controls="roster"
+					    onkeypress="return Interface.optionKeyEvent_friends_column_wrapper(event);"
+					    onblur="jQuery(this)[0].showFocus = false;"
+					    onfocus="jQuery(this)[0].showFocus = true;">
 	                    	<table class="friends_item" id="<?php echo $participant[1]; ?>"><tr>
 	         					<td><img src="<?php echo $_base_path; ?>get_profile_img.php?id=<?php echo $participant[1]; ?>" class="friends_item_picture" alt="userphoto" /></td>
 	                        	<td class="friends_item_name"><?php echo $participant[2].' '.$participant[3]; ?></td>

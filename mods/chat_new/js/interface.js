@@ -315,6 +315,15 @@ var Interface = {
 		}
 	},
 	
+	// opens conversation tab if element was selected and enter clicked
+	optionKeyEvent_friends_column_wrapper: function(event) {
+		var tb = event.target;
+
+	    if ((event.type == "keydown" || event.type == "keypress") && event.keyCode == 13) {
+	    	jQuery("div").filter(tb).trigger('click');
+		}
+	},
+	
 	// opens conversation tab
 	on_friends_column_wrapper: function () {
 		// do nothing if clicked on self
@@ -335,6 +344,15 @@ var Interface = {
 		}
 	},
 	
+	// opens conversation tab if element was selected and enter clicked
+	optionKeyEvent_inbox_list_item: function(event) {
+		var tb = event.target;
+
+	    if ((event.type == "keydown" || event.type == "keypress") && event.keyCode == 13) {
+	    	jQuery("li").filter(tb).trigger('click');
+		}
+	},
+	
 	// opens conversation tab
 	on_inbox_list_item: function () {
 		var jid = jQuery(this).attr('id').slice(6, jQuery(this).attr('id').length);
@@ -348,7 +366,13 @@ var Interface = {
 		if (jQuery(this).hasClass("inbox_list_item_new")) {
 			jQuery(this).removeClass("inbox_list_item_new");
 		}
-	}
+	},
+	
+	// forces screen readers to read latest updates
+	wai_aria_log: function (msg) {
+		jQuery(document.getElementById("xmpp-logs")).empty();
+		jQuery(document.getElementById("xmpp-logs")).append("<li>" + msg + "</li>");
+	} 
 
 };
  
@@ -516,10 +540,12 @@ jQuery('.friends_column_wrapper_classmates').live('click', function () {
 	if (jQuery(this).parent().attr('id') == friendsList.attr('id')){
 		friendsList[0].removeChild(jQuery(this)[0]);
 		Interface.replace_friend(clicked, friendsMembers);
+		jQuery(this).attr('title', jQuery(this).find("td")[1].textContent + " - group member");
 	}
 	else if (jQuery(this).parent().attr('id') == friendsMembers.attr('id')){
 		friendsMembers[0].removeChild(jQuery(this)[0]);
 		Interface.replace_friend(clicked, friendsList);
+		jQuery(this).attr('title', jQuery(this).find("td")[1].textContent + " - not member");
 	}
 	
 	Interface.refresh_form();
